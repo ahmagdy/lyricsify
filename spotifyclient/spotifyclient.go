@@ -52,7 +52,7 @@ func (spotifyClient *SpotifyClient) getSongsList(reqURL string) (response models
 // GetAllSongs return a map of string and string, the key is the song name and the value is the artists name
 func (spotifyClient *SpotifyClient) GetAllSongs() (map[string]string, error) {
 	var songs map[string]string
-	reqURL := fmt.Sprintf("%vme/tracks", APIUrl)
+	reqURL := fmt.Sprintf("%vme/tracks", spotifyClient.SpotifyAPIUrl)
 	for {
 		anon, err := spotifyClient.getSongsList(reqURL)
 		if err != nil {
