@@ -1,0 +1,5 @@
+package lyricsify
+
+func LoadEverything() {
+
+}
