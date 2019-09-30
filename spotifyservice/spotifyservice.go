@@ -1,4 +1,4 @@
-package spotifyclient
+package spotifyservice
 
 import (
 	"encoding/json"
@@ -12,18 +12,18 @@ import (
 	"github.com/Ahmad-Magdy/lyricsify/models"
 )
 
-// SpotifyClient Service to communicate with spotify
-type SpotifyClient struct {
-	SpotifyAPIUrl string
+// SpotifyService Service to communicate with spotify
+type SpotifyService struct {
+	spotifyAPIUrl string
 }
 
-// New create a new instance of SpotifyClient
-func New() *SpotifyClient {
-	return &SpotifyClient{"https://api.spotify.com/v1/"}
+// New create a new instance of SpotifyService
+func New() *SpotifyService {
+	return &SpotifyService{"https://api.spotify.com/v1/"}
 }
 
 // getSongsList To get Me Songs list
-func (spotifyClient *SpotifyClient) getSongsList(reqURL string) (response models.MeTrackResponse, err error) {
+func (spotifyService *SpotifyService) getSongsList(reqURL string) (response models.MeTrackResponse, err error) {
 	req, err := http.NewRequest("GET", reqURL, nil)
 	if err != nil {
 		return models.MeTrackResponse{}, err
@@ -50,16 +50,16 @@ func (spotifyClient *SpotifyClient) getSongsList(reqURL string) (response models
 }
 
 // GetAllSongs return a map of string and string, the key is the song name and the value is the artists name
-func (spotifyClient *SpotifyClient) GetAllSongs() (map[string]string, error) {
+func (spotifyService *SpotifyService) GetAllSongs() (map[string]string, error) {
 	var songs map[string]string
-	reqURL := fmt.Sprintf("%vme/tracks", spotifyClient.SpotifyAPIUrl)
+	reqURL := fmt.Sprintf("%vme/tracks", spotifyService.spotifyAPIUrl)
 	for {
-		anon, err := spotifyClient.getSongsList(reqURL)
+		anon, err := spotifyService.getSongsList(reqURL)
 		if err != nil {
 			return nil, err
 		}
 		for _, y := range anon.Items {
-			songs[y.Track.Name] = spotifyClient.getArtistsName(y.Track.Artists)
+			songs[y.Track.Name] = spotifyService.getArtistsName(y.Track.Artists)
 		}
 		if len(anon.Next) == 0 {
 			break
@@ -69,7 +69,7 @@ func (spotifyClient *SpotifyClient) GetAllSongs() (map[string]string, error) {
 	return songs, nil
 }
 
-func (spotifyClient *SpotifyClient) getArtistsName(artistList []models.Artist) string {
+func (spotifyService *SpotifyService) getArtistsName(artistList []models.Artist) string {
 	var artistsName []string
 	for _, item := range artistList {
 		artistsName = append(artistsName, item.Name)
