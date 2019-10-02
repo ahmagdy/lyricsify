@@ -39,12 +39,14 @@ func (spotifyService *SpotifyService) getSongsList(ctx context.Context, reqURL s
 	if err != nil {
 		return models.MeTrackResponse{}, err
 	}
-	if res.StatusCode != 200 {
-		return models.MeTrackResponse{}, fmt.Errorf("Request with URL %v exit with code %v", res.Request.URL, res.StatusCode)
-	}
+
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return models.MeTrackResponse{}, err
+	}
+
+	if res.StatusCode != 200 {
+		return models.MeTrackResponse{}, fmt.Errorf("Request with URL %v exit with code %v and text %v", res.Request.URL, res.StatusCode, string(body))
 	}
 	trackResponse := models.MeTrackResponse{}
 	json.Unmarshal(body, &trackResponse)
@@ -53,7 +55,7 @@ func (spotifyService *SpotifyService) getSongsList(ctx context.Context, reqURL s
 
 // GetAllSongs to get all liked songs from spotify Me list return a map of string and string, the key is the song name and the value is the artists name
 func (spotifyService *SpotifyService) GetAllLikedSongs(ctx context.Context) (map[string]string, error) {
-	var songs map[string]string
+	 songs := make(map[string]string)
 	reqURL := fmt.Sprintf("%vme/tracks", spotifyService.spotifyAPIUrl)
 	for {
 		anon, err := spotifyService.getSongsList(ctx, reqURL)
