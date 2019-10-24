@@ -12,7 +12,7 @@ import (
 	"github.com/google/wire"
 )
 
-func CreateSomething(ctx context.Context) *Lyricsify {
+func InitializeLyricsify(ctx context.Context) *Lyricsify {
 	//elasticService, err := elasticclient.New(ctx,"lyrics")
 	//if err != nil{
 	//	log.Fatalf("Error")

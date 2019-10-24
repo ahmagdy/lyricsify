@@ -15,7 +15,7 @@ import (
 
 // Injectors from container.go:
 
-func CreateSomething(ctx context.Context) *Lyricsify {
+func InitializeLyricsify(ctx context.Context) *Lyricsify {
 	spotifyService := spotifyservice.New()
 	lyricsScrapingService := scrapping.New()
 	configConfig := config.NewConfig()

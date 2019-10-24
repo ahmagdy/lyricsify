@@ -6,5 +6,5 @@ type Config struct{
 
 func NewConfig() *Config {
 	return &Config{
-		LyricsIndexName: "SDsd"}
+		LyricsIndexName: "lyrics"}
 }
