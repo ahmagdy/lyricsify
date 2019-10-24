@@ -3,6 +3,7 @@ package elasticclient
 import (
 	"context"
 	"encoding/json"
+	"github.com/Ahmad-Magdy/lyricsify/internal"
 	"log"
 
 	"github.com/olivere/elastic/v7"
@@ -38,8 +39,27 @@ type LyricsSearchService struct {
 	indexName string
 }
 
+// New to create instance of this service
+func New(ctx context.Context, config *config.Config) *LyricsSearchService {
+	client, err := elastic.NewClient(elastic.SetSniff(false))
+	if err != nil {
+		return nil
+	}
+	info, code, err := client.Ping("http://localhost:9200").Do(ctx)
+	if err != nil {
+		return nil
+	}
+	log.Printf("Elasticsearch returned with code %d and version %s\n", code, info.Version.Number)
+	esClient := &LyricsSearchService{client, config.LyricsIndexName}
+	err = esClient.createIndexIfNotExist(ctx)
+	if err != nil {
+		return nil
+	}
+	return esClient
+}
+
 // New to create instance of this service, TOBE discussed
-func New(ctx context.Context, indexName string) (*LyricsSearchService, error) {
+func NewX(ctx context.Context, indexName string) (*LyricsSearchService, error) {
 	client, err := elastic.NewClient(elastic.SetSniff(false))
 	if err != nil {
 		return nil, err
@@ -101,9 +121,10 @@ func (els *LyricsSearchService) deleteByIndex(ctx context.Context, itemID string
 }
 
 // Search to search for song lyrics across ES Index.
-func (els *LyricsSearchService) Search(ctx context.Context, key string, text string) (lyrics []LyricsBody, err error) {
+func (els *LyricsSearchService) Search(ctx context.Context, text string) (lyrics []LyricsBody, err error) {
 	//termQuery := elastic.NewTermQuery("content", "All Around The World")
-	matchQuery := elastic.NewMatchQuery(key, text)
+	matchQuery := elastic.NewMultiMatchQuery(text, "title", "content")
+
 	searchResult, err := els.esClient.Search().
 		Index(els.indexName).
 		Query(matchQuery).
