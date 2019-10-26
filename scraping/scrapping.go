@@ -105,12 +105,12 @@ func (songService *LyricsScrapingService) GetLyricsForSong(ctx context.Context, 
 
 func LoadCSV() [][]string {
 	file, err := os.Open("../results.csv")
-	errorhandler.HandleError(err)
+	errorhandler.HandleError("1::LoadCSV", err)
 	defer file.Close()
 	reader := csv.NewReader(file)
 	reader.Comma = '|'
 	records, err := reader.ReadAll()
-	errorhandler.HandleError(err)
+	errorhandler.HandleError("2::LoadCSV", err)
 	fmt.Println(records[1][0], records[1][1])
 	return records
 }

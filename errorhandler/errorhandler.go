@@ -4,8 +4,9 @@ import (
 	"log"
 )
 
-func HandleError(err error) {
+// HandleError a general handler for errors in go
+func HandleError(location string, err error) {
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatal(location + err.Error())
 	}
 }

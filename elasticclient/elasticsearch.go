@@ -3,8 +3,9 @@ package elasticclient
 import (
 	"context"
 	"encoding/json"
-	config "github.com/Ahmad-Magdy/lyricsify/internal"
 	"log"
+
+	config "github.com/Ahmad-Magdy/lyricsify/internal"
 
 	"github.com/olivere/elastic/v7"
 )
@@ -101,7 +102,7 @@ func (els *LyricsSearchService) Create(ctx context.Context, title string, conten
 		BodyJson(LyricsBody{title, content}).
 		Do(ctx)
 	if err != nil {
-		return nil
+		return err
 	}
 	log.Printf("Created item with ID %v", res.Id)
 	_, err = els.esClient.Flush().Index(els.indexName).Do(ctx)
