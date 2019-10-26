@@ -19,7 +19,6 @@ func NewLyricsifyService(spotifyService *spotifyservice.SpotifyService, scraper 
 }
 
 func (lyricsService *Lyricsify) LoadSongs(ctx context.Context) (songsMap map[string]string, err error) {
-	// use goroutiens in fetching lyrics
 	allSongs, err := lyricsService.spotifyService.GetAllLikedSongs(ctx)
 	return allSongs, err
 }
@@ -34,7 +33,7 @@ func (lyricsService *Lyricsify) SaveLyrics(ctx context.Context, title string, ly
 	return err
 }
 
-func (lyricsService *Lyricsify) SearchByText(ctx context.Context, text string) (res interface{}, err error) {
+func (lyricsService *Lyricsify) SearchByText(ctx context.Context, text string) (res []elasticclient.LyricsBody, err error) {
 	results, err := lyricsService.elasticClient.Search(ctx, text)
 	return results, err
 }
