@@ -4,6 +4,7 @@ package lyricsify
 
 import (
 	"context"
+
 	"github.com/Ahmad-Magdy/lyricsify/elasticclient"
 	config "github.com/Ahmad-Magdy/lyricsify/internal"
 
@@ -13,11 +14,6 @@ import (
 )
 
 func InitializeLyricsify(ctx context.Context) *Lyricsify {
-	//elasticService, err := elasticclient.New(ctx,"lyrics")
-	//if err != nil{
-	//	log.Fatalf("Error")
-	//}
-	//		wire.InterfaceValue(elasticclient.LyricsSearchService{}, elasticclient.NewX(ctx,"lyrics")),
 	wire.Build(
 		config.NewConfig,
 		spotifyservice.New,
