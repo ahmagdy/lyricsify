@@ -23,7 +23,7 @@ SPOTIFY_TOKEN:
 LYRICS_INDEX_NAME: 
 ```
 
-#### Simple example
+#### Sample
 ```go
 ctx := context.Background()
 // Initialize Instance of Lyricsify
@@ -38,7 +38,11 @@ lyrics, err := lyricsify.FetchLyrics(ctx, song, artists)
 err := lyricsify.SaveLyrics(ctx, song, lyrics)
 
 ```
-
+#### Docker Compose
+Elasticsearch is required to run the tool, docker compose is ready to be used.
+```bash
+docker-compose up
+```
 
 
 ## License:
