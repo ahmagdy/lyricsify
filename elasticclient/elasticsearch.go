@@ -3,7 +3,7 @@ package elasticclient
 import (
 	"context"
 	"encoding/json"
-	"github.com/Ahmad-Magdy/lyricsify/internal"
+	config "github.com/Ahmad-Magdy/lyricsify/internal"
 	"log"
 
 	"github.com/olivere/elastic/v7"

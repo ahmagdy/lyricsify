@@ -7,8 +7,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
+
+	config "github.com/Ahmad-Magdy/lyricsify/internal"
 
 	"github.com/Ahmad-Magdy/lyricsify/models"
 )
@@ -16,11 +17,12 @@ import (
 // SpotifyService Service to communicate with spotify
 type SpotifyService struct {
 	spotifyAPIUrl string
+	config        *config.Config
 }
 
 // New create a new instance of SpotifyService
-func New() *SpotifyService {
-	return &SpotifyService{"https://api.spotify.com/v1/"}
+func New(config *config.Config) *SpotifyService {
+	return &SpotifyService{"https://api.spotify.com/v1/", config}
 }
 
 // getSongsList To get Me Songs list
@@ -29,9 +31,9 @@ func (spotifyService *SpotifyService) getSongsList(ctx context.Context, reqURL s
 	if err != nil {
 		return models.MeTrackResponse{}, err
 	}
-	spotifyToken := os.Getenv("SPOTIFY_TOKEN")
+	spotifyToken := spotifyService.config.SpotifyToken
 	if spotifyToken == "" {
-		return models.MeTrackResponse{}, errors.New("SPOTIFY_TOKEN environment variable is not found.")
+		return models.MeTrackResponse{}, errors.New("spotify token is not set")
 	}
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %v", spotifyToken))
 	req = req.WithContext(ctx)
@@ -55,7 +57,7 @@ func (spotifyService *SpotifyService) getSongsList(ctx context.Context, reqURL s
 
 // GetAllSongs to get all liked songs from spotify Me list return a map of string and string, the key is the song name and the value is the artists name
 func (spotifyService *SpotifyService) GetAllLikedSongs(ctx context.Context) (map[string]string, error) {
-	 songs := make(map[string]string)
+	songs := make(map[string]string)
 	reqURL := fmt.Sprintf("%vme/tracks", spotifyService.spotifyAPIUrl)
 	for {
 		anon, err := spotifyService.getSongsList(ctx, reqURL)

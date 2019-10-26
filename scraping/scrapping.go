@@ -11,6 +11,8 @@ import (
 	"os"
 	"strings"
 
+	config "github.com/Ahmad-Magdy/lyricsify/internal"
+
 	"github.com/Ahmad-Magdy/lyricsify/errorhandler"
 	"github.com/Ahmad-Magdy/lyricsify/models"
 	"github.com/PuerkitoBio/goquery"
@@ -19,17 +21,18 @@ import (
 // LyricsScrapingService Service to get song Lyrics from the internet
 type LyricsScrapingService struct {
 	baseSearchURL string
+	config        *config.Config
 }
 
 // New Create
-func New() *LyricsScrapingService {
-	return &LyricsScrapingService{"https://api.genius.com/search"}
+func New(config *config.Config) *LyricsScrapingService {
+	return &LyricsScrapingService{config.GeniusBaseURL, config}
 }
 
 func (songService *LyricsScrapingService) getSongLyricsResults(ctx context.Context, songName string, artists string) (searchResults models.SearchResult, err error) {
-	geniusAccessToken := os.Getenv("GENIUS_TOKEN")
+	geniusAccessToken := songService.config.GeniusToken
 	if geniusAccessToken == "" {
-		return models.SearchResult{}, errors.New("GENIUS_TOKEN environment variable is not found.")
+		return models.SearchResult{}, errors.New("genius token is not set.")
 	}
 	req, _ := http.NewRequest("GET", songService.baseSearchURL, nil)
 	queryParams := req.URL.Query()

@@ -16,9 +16,9 @@ import (
 // Injectors from container.go:
 
 func InitializeLyricsify(ctx context.Context) *Lyricsify {
-	spotifyService := spotifyservice.New()
-	lyricsScrapingService := scrapping.New()
 	configConfig := config.NewConfig()
+	spotifyService := spotifyservice.New(configConfig)
+	lyricsScrapingService := scrapping.New(configConfig)
 	lyricsSearchService := elasticclient.New(ctx, configConfig)
 	lyricsify := NewLyricsifyService(spotifyService, lyricsScrapingService, lyricsSearchService)
 	return lyricsify
