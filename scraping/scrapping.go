@@ -29,10 +29,11 @@ func New(config *config.Config) *LyricsScrapingService {
 	return &LyricsScrapingService{config.GeniusBaseURL, config}
 }
 
+// getSongLyricsResults Search for song lyrics and get the results list of the search, but it doesn't contain the actual lyrics
 func (songService *LyricsScrapingService) getSongLyricsResults(ctx context.Context, songName string, artists string) (searchResults models.SearchResult, err error) {
 	geniusAccessToken := songService.config.GeniusToken
 	if geniusAccessToken == "" {
-		return models.SearchResult{}, errors.New("genius token is not set.")
+		return models.SearchResult{}, errors.New("genius token is not set")
 	}
 	req, _ := http.NewRequest("GET", songService.baseSearchURL, nil)
 	queryParams := req.URL.Query()
@@ -97,7 +98,7 @@ func (songService *LyricsScrapingService) GetLyricsForSong(ctx context.Context, 
 		return "", err
 	}
 	var lyrics string
-	doc.Find("div.scraping").Each(func(i int, s *goquery.Selection) {
+	doc.Find("div.lyrics").Each(func(i int, s *goquery.Selection) {
 		lyrics = s.Text()
 	})
 	return lyrics, nil
