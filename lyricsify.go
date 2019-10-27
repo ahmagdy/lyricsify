@@ -43,3 +43,11 @@ func (lyricsService *Lyricsify) SearchByText(ctx context.Context, text string) (
 	results, err := lyricsService.elasticClient.Search(ctx, text)
 	return results, err
 }
+
+func(lyricsService *Lyricsify) IsLyricsExist(ctx context.Context, title string) (bool, error){
+	id, err:= 	lyricsService.elasticClient.GetItemID(ctx, title)
+	if err != nil{
+		return false, err
+	}
+	return id != "", nil
+}

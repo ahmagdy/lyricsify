@@ -83,7 +83,7 @@ func (songService *LyricsScrapingService) getSongLyricsResults(ctx context.Conte
 func (songService *LyricsScrapingService) GetLyricsForSong(ctx context.Context, songName string, artists string) (lyricsText string, err error) {
 	songInfo, err := songService.getSongLyricsResults(ctx, songName, artists)
 	if songInfo.Type == "" {
-		err = fmt.Errorf("Couldn't find scraping for song %v", songName)
+		err = fmt.Errorf("Couldn't find lyriccs for song %v", songName)
 		return "", err
 	}
 	log.Printf("Calling URL: %v", songInfo.Result.URL)

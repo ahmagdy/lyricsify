@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"log"
 
-	config "github.com/Ahmad-Magdy/lyricsify/internal"
+	internal "github.com/Ahmad-Magdy/lyricsify/internal"
 
 	"github.com/olivere/elastic/v7"
 )
@@ -41,8 +41,11 @@ type LyricsSearchService struct {
 }
 
 // New to create instance of this service
-func New(ctx context.Context, config *config.Config) *LyricsSearchService {
-	client, err := elastic.NewClient(elastic.SetSniff(false))
+func New(ctx context.Context, config *internal.Config) *LyricsSearchService {
+	client, err := elastic.NewClient(
+		elastic.SetSniff(false),
+		elastic.SetRetrier(elastic.NewBackoffRetrier(elastic.NewSimpleBackoff(100, 200))),
+	)
 	if err != nil {
 		return nil
 	}
@@ -97,6 +100,7 @@ func (els *LyricsSearchService) createIndexIfNotExist(ctx context.Context) (err 
 
 // Create Create ES Document.
 func (els *LyricsSearchService) Create(ctx context.Context, title string, content string) (err error) {
+
 	res, err := els.esClient.Index().
 		Index(els.indexName).
 		BodyJson(LyricsBody{title, content}).
@@ -112,6 +116,48 @@ func (els *LyricsSearchService) Create(ctx context.Context, title string, conten
 	return nil
 }
 
+// Update ES Document.
+func (els *LyricsSearchService) Update(ctx context.Context, id string, title string, content string) (err error) {
+
+	res, err := els.esClient.Update().
+		Index(els.indexName).
+		Id(id).
+		Script(elastic.NewScript("ctx._source.content = params.content; ctx._source.title = params.title").Param("content", "Hi x").Param("title", title+"bye")).
+		Upsert(map[string]interface{}{}).
+		Do(ctx)
+
+	if err != nil {
+		return err
+	}
+	log.Printf("Updated item with ID %v", res.Id)
+	_, err = els.esClient.Flush().Index(els.indexName).Do(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetItemID Get Item ID
+func (els *LyricsSearchService) GetItemID(ctx context.Context, title string) (id string, err error) {
+	matchQuery := elastic.NewMatchQuery("title", title)
+
+	searchResult, err := els.esClient.Search().
+		Index(els.indexName).
+		Query(matchQuery).
+		Pretty(true).
+		Do(ctx)
+
+	if err != nil {
+		return "", err
+	}
+	log.Printf("Item search match %v", searchResult.TotalHits())
+	if len(searchResult.Hits.Hits) == 0 {
+		return "", nil
+	}
+	firstHit := searchResult.Hits.Hits[0]
+	return firstHit.Id, nil
+}
+
 func (els *LyricsSearchService) deleteByIndex(ctx context.Context, itemID string) (err error) {
 	res, err := els.esClient.Delete().Index(els.indexName).Id(itemID).Do(ctx)
 	if err != nil {
@@ -124,7 +170,7 @@ func (els *LyricsSearchService) deleteByIndex(ctx context.Context, itemID string
 // Search to search for song lyrics across ES Index.
 func (els *LyricsSearchService) Search(ctx context.Context, text string) (lyrics []LyricsBody, err error) {
 	//termQuery := elastic.NewTermQuery("content", "All Around The World")
-	matchQuery := elastic.NewMultiMatchQuery(text, "title", "content")
+	matchQuery := elastic.NewMultiMatchQuery(text, "title", "content").Type("phrase_prefix")
 
 	searchResult, err := els.esClient.Search().
 		Index(els.indexName).
