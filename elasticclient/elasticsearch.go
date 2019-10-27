@@ -122,7 +122,9 @@ func (els *LyricsSearchService) Update(ctx context.Context, id string, title str
 	res, err := els.esClient.Update().
 		Index(els.indexName).
 		Id(id).
-		Script(elastic.NewScript("ctx._source.content = params.content; ctx._source.title = params.title").Param("content", "Hi x").Param("title", title+"bye")).
+		Script(elastic.NewScript("ctx._source.content = params.content; ctx._source.title = params.title").
+			Param("title", title).
+			Param("content", content)).
 		Upsert(map[string]interface{}{}).
 		Do(ctx)
 
