@@ -25,10 +25,19 @@ func main() {
 	for song, artists := range songsMap {
 		wg.Add(1)
 		go func(song string, artists string) {
-			log.Println(song, artists)
 			defer wg.Done()
 			ctxKey := contextKey(song)
 			ctx := context.WithValue(ctx, ctxKey, song)
+
+			log.Println(song, artists)
+
+
+			isExist, err := lyricsify.IsLyricsExist(ctx, song)
+			errorhandler.HandleError("Main IsLyricsExist: ", err)
+			if isExist {
+				log.Printf("Skipping song %v since it's already exist in the datastore", song)
+				return
+			}
 			lyrics, err := lyricsify.FetchLyrics(ctx, song, artists)
 			if err != nil {
 				log.Println(err.Error())
