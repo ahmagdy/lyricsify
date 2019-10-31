@@ -19,7 +19,7 @@ const mapping = `
 	"mappings":{
 			"properties":{
 				"title": {
-					"type":"keyword"
+					"type":"text"
 				},
 				"content": {
 					"type":"text"

@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
+	"github.com/Ahmad-Magdy/lyricsify/errorhandler"
 	"log"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/Ahmad-Magdy/lyricsify"
-	"github.com/Ahmad-Magdy/lyricsify/errorhandler"
 )
 
 type contextKey string
@@ -19,6 +19,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 	lyricsify := lyricsify.InitializeLyricsify(ctx)
+
 	songsMap, err := lyricsify.LoadSongs(ctx)
 	errorhandler.HandleError("Main LoadSongs: ", err)
 
@@ -51,4 +52,9 @@ func main() {
 	wg.Wait()
 	log.Println(strings.Repeat("-", 5), "Done! ", strings.Repeat("-", 5))
 
+	searchResults, err := lyricsify.SearchByText(ctx, "Did you work real hard")
+	errorhandler.HandleError("search here ",err)
+	for _, result := range searchResults {
+		log.Println(result.Title)
+	}
 }
