@@ -6,7 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.5.0
 	github.com/google/wire v0.3.0
 	github.com/magiconair/properties v1.8.1 // indirect
-	github.com/olivere/elastic/v7 v7.0.6
+	github.com/olivere/elastic/v7 v7.0.9
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
