@@ -7,19 +7,19 @@ package lyricsify
 
 import (
 	"context"
-	"github.com/Ahmad-Magdy/lyricsify/elasticclient"
-	"github.com/Ahmad-Magdy/lyricsify/internal"
+	"github.com/Ahmad-Magdy/lyricsify/search"
+	"github.com/Ahmad-Magdy/lyricsify/config"
 	"github.com/Ahmad-Magdy/lyricsify/scraping"
-	"github.com/Ahmad-Magdy/lyricsify/spotifyservice"
+	"github.com/Ahmad-Magdy/lyricsify/spotify"
 )
 
 // Injectors from container.go:
 
 func InitializeLyricsify(ctx context.Context) *Lyricsify {
 	configConfig := config.NewConfig()
-	spotifyService := spotifyservice.New(configConfig)
+	spotifyService := spotify.New(configConfig)
 	lyricsScrapingService := scrapping.New(configConfig)
-	lyricsSearchService := elasticclient.New(ctx, configConfig)
-	lyricsify := NewLyricsifyService(spotifyService, lyricsScrapingService, lyricsSearchService)
+	lyricsSearchService := search.New(ctx, configConfig)
+	lyricsify := New(spotifyService, lyricsScrapingService, lyricsSearchService)
 	return lyricsify
 }

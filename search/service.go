@@ -1,11 +1,11 @@
-package elasticclient
+package search
 
 import (
 	"context"
 	"encoding/json"
 	"log"
 
-	internal "github.com/Ahmad-Magdy/lyricsify/internal"
+	internal "github.com/Ahmad-Magdy/lyricsify/config"
 
 	"github.com/olivere/elastic/v7"
 )

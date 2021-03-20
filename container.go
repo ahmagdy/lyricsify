@@ -5,20 +5,20 @@ package lyricsify
 import (
 	"context"
 
-	"github.com/Ahmad-Magdy/lyricsify/elasticclient"
-	config "github.com/Ahmad-Magdy/lyricsify/internal"
+	"github.com/Ahmad-Magdy/lyricsify/search"
+	config "github.com/Ahmad-Magdy/lyricsify/config"
 
 	scrapping "github.com/Ahmad-Magdy/lyricsify/scraping"
-	"github.com/Ahmad-Magdy/lyricsify/spotifyservice"
+	"github.com/Ahmad-Magdy/lyricsify/spotify"
 	"github.com/google/wire"
 )
 
 func InitializeLyricsify(ctx context.Context) *Lyricsify {
 	wire.Build(
 		config.NewConfig,
-		spotifyservice.New,
+		spotify.New,
 		scrapping.New,
-		elasticclient.New,
-		NewLyricsifyService)
+		search.New,
+		New)
 	return &Lyricsify{}
 }

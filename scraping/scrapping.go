@@ -11,10 +11,9 @@ import (
 	"os"
 	"strings"
 
-	config "github.com/Ahmad-Magdy/lyricsify/internal"
+	config "github.com/Ahmad-Magdy/lyricsify/config"
 
-	"github.com/Ahmad-Magdy/lyricsify/errorhandler"
-	"github.com/Ahmad-Magdy/lyricsify/models"
+	"github.com/Ahmad-Magdy/lyricsify/types"
 	"github.com/PuerkitoBio/goquery"
 )
 
@@ -30,10 +29,10 @@ func New(config *config.Config) *LyricsScrapingService {
 }
 
 // getSongLyricsResults Search for song lyrics and get the results list of the search, but it doesn't contain the actual lyrics
-func (songService *LyricsScrapingService) getSongLyricsResults(ctx context.Context, songName string, artists string) (searchResults models.SearchResult, err error) {
+func (songService *LyricsScrapingService) getSongLyricsResults(ctx context.Context, songName string, artists string) (searchResults types.SearchResult, err error) {
 	geniusAccessToken := songService.config.GeniusToken
 	if geniusAccessToken == "" {
-		return models.SearchResult{}, errors.New("genius token is not set")
+		return types.SearchResult{}, errors.New("genius token is not set")
 	}
 	req, _ := http.NewRequest("GET", songService.baseSearchURL, nil)
 	queryParams := req.URL.Query()
@@ -44,20 +43,20 @@ func (songService *LyricsScrapingService) getSongLyricsResults(ctx context.Conte
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return models.SearchResult{}, err
+		return types.SearchResult{}, err
 	}
 	if res.StatusCode != 200 {
 		errText := fmt.Sprintf("getSongLyricsResults: Request with URL %v exit with code %v", res.Request.URL, res.StatusCode)
-		return models.SearchResult{}, errors.New(errText)
+		return types.SearchResult{}, errors.New(errText)
 	}
 
-	var geniusResponse models.GeniusResponse
+	var geniusResponse types.GeniusResponse
 	err = json.NewDecoder(res.Body).Decode(&geniusResponse)
 	if err != nil {
-		return models.SearchResult{}, err
+		return types.SearchResult{}, err
 	}
 
-	var songSearchResult models.SearchResult
+	var songSearchResult types.SearchResult
 	singersList := strings.Split(artists, ",")
 	breakOuterLoop := false
 	for _, hitItem := range geniusResponse.Response.Hits {
@@ -104,14 +103,20 @@ func (songService *LyricsScrapingService) GetLyricsForSong(ctx context.Context, 
 	return lyrics, nil
 }
 
-func LoadCSV() [][]string {
+func LoadCSV() ([][]string , error){
 	file, err := os.Open("../results.csv")
-	errorhandler.HandleError("1::LoadCSV", err)
+	if err != nil{
+		return nil, fmt.Errorf("load csv: %w", err)
+	}
 	defer file.Close()
+
 	reader := csv.NewReader(file)
 	reader.Comma = '|'
+
 	records, err := reader.ReadAll()
-	errorhandler.HandleError("2::LoadCSV", err)
-	fmt.Println(records[1][0], records[1][1])
-	return records
+	if err != nil{
+		return nil, fmt.Errorf("reader.ReadAll: %w", err)
+	}
+
+	return records, nil
 }

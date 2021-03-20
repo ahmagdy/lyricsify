@@ -1,4 +1,4 @@
-package spotifyservice
+package spotify
 
 import (
 	"context"
@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"strings"
 
-	config "github.com/Ahmad-Magdy/lyricsify/internal"
+	config "github.com/Ahmad-Magdy/lyricsify/config"
 
-	"github.com/Ahmad-Magdy/lyricsify/models"
+	"github.com/Ahmad-Magdy/lyricsify/types"
 )
 
 // SpotifyService Service to communicate with spotify
@@ -26,31 +26,31 @@ func New(config *config.Config) *SpotifyService {
 }
 
 // getSongsList To get Me Songs list
-func (spotifyService *SpotifyService) getSongsList(ctx context.Context, reqURL string) (response models.MeTrackResponse, err error) {
+func (spotifyService *SpotifyService) getSongsList(ctx context.Context, reqURL string) (response types.MeTrackResponse, err error) {
 	req, err := http.NewRequest("GET", reqURL, nil)
 	if err != nil {
-		return models.MeTrackResponse{}, err
+		return types.MeTrackResponse{}, err
 	}
 	spotifyToken := spotifyService.config.SpotifyToken
 	if spotifyToken == "" {
-		return models.MeTrackResponse{}, errors.New("spotify token is not set")
+		return types.MeTrackResponse{}, errors.New("spotify token is not set")
 	}
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %v", spotifyToken))
 	req = req.WithContext(ctx)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return models.MeTrackResponse{}, err
+		return types.MeTrackResponse{}, err
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return models.MeTrackResponse{}, err
+		return types.MeTrackResponse{}, err
 	}
 
 	if res.StatusCode != 200 {
-		return models.MeTrackResponse{}, fmt.Errorf("Request with URL %v exit with code %v and text %v", res.Request.URL, res.StatusCode, string(body))
+		return types.MeTrackResponse{}, fmt.Errorf("Request with URL %v exit with code %v and text %v", res.Request.URL, res.StatusCode, string(body))
 	}
-	trackResponse := models.MeTrackResponse{}
+	trackResponse := types.MeTrackResponse{}
 	json.Unmarshal(body, &trackResponse)
 	return trackResponse, nil
 }
@@ -75,7 +75,7 @@ func (spotifyService *SpotifyService) GetAllLikedSongs(ctx context.Context) (map
 	return songs, nil
 }
 
-func (spotifyService *SpotifyService) getArtistsName(artistList []models.Artist) string {
+func (spotifyService *SpotifyService) getArtistsName(artistList []types.Artist) string {
 	var artistsName []string
 	for _, item := range artistList {
 		artistsName = append(artistsName, item.Name)

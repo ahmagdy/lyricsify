@@ -3,20 +3,20 @@ package lyricsify
 import (
 	"context"
 
-	"github.com/Ahmad-Magdy/lyricsify/elasticclient"
+	"github.com/Ahmad-Magdy/lyricsify/search"
 	lyricsscraping "github.com/Ahmad-Magdy/lyricsify/scraping"
-	"github.com/Ahmad-Magdy/lyricsify/spotifyservice"
+	"github.com/Ahmad-Magdy/lyricsify/spotify"
 )
 
 // Lyricsify Main package service
 type Lyricsify struct {
-	spotifyService *spotifyservice.SpotifyService
+	spotifyService *spotify.SpotifyService
 	scraper        *lyricsscraping.LyricsScrapingService
-	elasticClient  *elasticclient.LyricsSearchService
+	elasticClient  *search.LyricsSearchService
 }
 
-// NewLyricsifyService To create a new instance of Lyricsify
-func NewLyricsifyService(spotifyService *spotifyservice.SpotifyService, scraper *lyricsscraping.LyricsScrapingService, elasticClient *elasticclient.LyricsSearchService) *Lyricsify {
+// New To create a new instance of Lyricsify
+func New(spotifyService *spotify.SpotifyService, scraper *lyricsscraping.LyricsScrapingService, elasticClient *search.LyricsSearchService) *Lyricsify {
 	return &Lyricsify{spotifyService, scraper, elasticClient}
 }
 
@@ -39,7 +39,7 @@ func (lyricsService *Lyricsify) SaveLyrics(ctx context.Context, title string, ly
 }
 
 // SearchByText to search in the saved songs by text
-func (lyricsService *Lyricsify) SearchByText(ctx context.Context, text string) (res []elasticclient.LyricsBody, err error) {
+func (lyricsService *Lyricsify) SearchByText(ctx context.Context, text string) (res []search.LyricsBody, err error) {
 	results, err := lyricsService.elasticClient.Search(ctx, text)
 	return results, err
 }
