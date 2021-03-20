@@ -1,8 +1,6 @@
 package config
 
 import (
-	"log"
-
 	"github.com/spf13/viper"
 )
 
@@ -13,14 +11,14 @@ type Config struct {
 	GeniusBaseURL   string
 }
 
-func NewConfig() *Config {
+func New() (*Config, error) {
 	viperConfig := viper.New()
 	viperConfig.SetConfigType("yaml")
 	viperConfig.AddConfigPath("$HOME/Documents")
 
 	err := viperConfig.ReadInConfig()
 	if err != nil {
-		log.Fatalf(err.Error())
+		return nil, err
 	}
 	viperConfig.AutomaticEnv()
 	viperConfig.SetDefault("LYRICS_INDEX_NAME", "lyrics")
@@ -30,5 +28,5 @@ func NewConfig() *Config {
 		SpotifyToken:    viperConfig.GetString("SPOTIFY_TOKEN"),
 		GeniusToken:     viperConfig.GetString("GENIUS_TOKEN"),
 		GeniusBaseURL:   viperConfig.GetString("GENIUS_BASE_URL"),
-	}
+	}, nil
 }

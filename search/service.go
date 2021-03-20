@@ -3,11 +3,10 @@ package search
 import (
 	"context"
 	"encoding/json"
-	"log"
 
-	internal "github.com/Ahmad-Magdy/lyricsify/config"
-
+	"github.com/Ahmad-Magdy/lyricsify/config"
 	"github.com/olivere/elastic/v7"
+	"go.uber.org/zap"
 )
 
 const mapping = `
@@ -34,93 +33,44 @@ type LyricsBody struct {
 	Content string `json:"content"`
 }
 
-// LyricsSearchService Service to Create Lyrics documents and search across all lyrics
-type LyricsSearchService struct {
+// Service a service to create lyrics documents and search across all lyrics
+type Service struct {
+	logger    *zap.Logger
 	esClient  *elastic.Client
 	indexName string
 }
 
-// New to create instance of this service
-func New(ctx context.Context, config *internal.Config) *LyricsSearchService {
-	client, err := elastic.NewClient(
-		elastic.SetSniff(false),
-		elastic.SetRetrier(elastic.NewBackoffRetrier(elastic.NewSimpleBackoff(100, 200))),
-	)
-	if err != nil {
-		return nil
-	}
-	info, code, err := client.Ping("http://localhost:9200").Do(ctx)
-	if err != nil {
-		return nil
-	}
-	log.Printf("Elasticsearch returned with code %d and version %s\n", code, info.Version.Number)
-	esClient := &LyricsSearchService{client, config.LyricsIndexName}
-	err = esClient.createIndexIfNotExist(ctx)
-	if err != nil {
-		return nil
-	}
-	return esClient
-}
-
-// New to create instance of this service, TOBE discussed
-func NewX(ctx context.Context, indexName string) (*LyricsSearchService, error) {
-	client, err := elastic.NewClient(elastic.SetSniff(false))
+// New to create instance of search service
+func New(ctx context.Context, config *config.Config, client *elastic.Client, logger *zap.Logger) (*Service, error) {
+	esClient := &Service{logger, client, config.LyricsIndexName}
+	// TODO [ahmed]: This shouldn't be placed here
+	err := esClient.createIndexIfNotExist(ctx)
 	if err != nil {
 		return nil, err
 	}
-	info, code, err := client.Ping("http://localhost:9200").Do(ctx)
-	if err != nil {
-		return nil, err
-	}
-	log.Printf("Elasticsearch returned with code %d and version %s\n", code, info.Version.Number)
-	esClient := &LyricsSearchService{client, indexName}
-	err = esClient.createIndexIfNotExist(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return esClient, nil
-}
-
-// CreateIndexIfNotExist To check ES Index and create it if it doesn't exist.
-func (els *LyricsSearchService) createIndexIfNotExist(ctx context.Context) (err error) {
-	exists, err := els.esClient.IndexExists(els.indexName).Do(ctx)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		log.Printf("Index %v doesn't exist, creating a new one.", els.indexName)
-		_, err := els.esClient.CreateIndex(els.indexName).Body(mapping).Do(ctx)
-
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return esClient, err
 }
 
 // Create Create ES Document.
-func (els *LyricsSearchService) Create(ctx context.Context, title string, content string) (err error) {
-
-	res, err := els.esClient.Index().
-		Index(els.indexName).
+func (s *Service) Create(ctx context.Context, title string, content string) error {
+	res, err := s.esClient.Index().
+		Index(s.indexName).
 		BodyJson(LyricsBody{title, content}).
 		Do(ctx)
 	if err != nil {
 		return err
 	}
-	log.Printf("Created item with ID %v", res.Id)
-	_, err = els.esClient.Flush().Index(els.indexName).Do(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	s.logger.Info("Created item with ID", zap.String("id", res.Id))
+	_, err = s.esClient.Flush().Index(s.indexName).Do(ctx)
+	return err
 }
 
 // Update ES Document.
-func (els *LyricsSearchService) Update(ctx context.Context, id string, title string, content string) (err error) {
+func (s *Service) Update(ctx context.Context, id string, title string, content string) (err error) {
 
-	res, err := els.esClient.Update().
-		Index(els.indexName).
+	res, err := s.esClient.Update().
+		Index(s.indexName).
 		Id(id).
 		Script(elastic.NewScript("ctx._source.content = params.content; ctx._source.title = params.title").
 			Param("title", title).
@@ -131,57 +81,50 @@ func (els *LyricsSearchService) Update(ctx context.Context, id string, title str
 	if err != nil {
 		return err
 	}
-	log.Printf("Updated item with ID %v", res.Id)
-	_, err = els.esClient.Flush().Index(els.indexName).Do(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	s.logger.Info("Updated item with ID", zap.String("id", res.Id))
+
+	_, err = s.esClient.Flush().Index(s.indexName).Do(ctx)
+	return err
 }
 
 // GetItemID Get Item ID
-func (els *LyricsSearchService) GetItemID(ctx context.Context, title string) (id string, err error) {
+func (s *Service) GetItemID(ctx context.Context, title string) (id string, err error) {
 	matchQuery := elastic.NewMatchQuery("title", title)
 
-	searchResult, err := els.esClient.Search().
-		Index(els.indexName).
+	searchResult, err := s.esClient.Search().
+		Index(s.indexName).
 		Query(matchQuery).
 		Pretty(true).
 		Do(ctx)
-
 	if err != nil {
 		return "", err
 	}
-	log.Printf("Item search match %v", searchResult.TotalHits())
+
+	s.logger.Info("Item search match", zap.Int64("hits", searchResult.TotalHits()))
+
 	if len(searchResult.Hits.Hits) == 0 {
 		return "", nil
 	}
+
 	firstHit := searchResult.Hits.Hits[0]
 	return firstHit.Id, nil
 }
 
-func (els *LyricsSearchService) deleteByIndex(ctx context.Context, itemID string) (err error) {
-	res, err := els.esClient.Delete().Index(els.indexName).Id(itemID).Do(ctx)
-	if err != nil {
-		return err
-	}
-	log.Printf("Delete response %v", res.Result)
-	return nil
-}
-
 // Search to search for song lyrics across ES Index.
-func (els *LyricsSearchService) Search(ctx context.Context, text string) (lyrics []LyricsBody, err error) {
+func (s *Service) Search(ctx context.Context, text string) (lyrics []LyricsBody, err error) {
 	//termQuery := elastic.NewTermQuery("content", "All Around The World")
 	matchQuery := elastic.NewMultiMatchQuery(text, "title", "content").Type("phrase_prefix")
 
-	searchResult, err := els.esClient.Search().
-		Index(els.indexName).
+	searchResult, err := s.esClient.Search().
+		Index(s.indexName).
 		Query(matchQuery).
 		Pretty(true).
 		Do(ctx)
 	if err != nil {
 		return nil, err
 	}
+
 	var lyricsResults []LyricsBody
 	for _, hit := range searchResult.Hits.Hits {
 		var hitLyricsBody LyricsBody
@@ -190,8 +133,33 @@ func (els *LyricsSearchService) Search(ctx context.Context, text string) (lyrics
 			return nil, err
 		}
 		lyricsResults = append(lyricsResults, hitLyricsBody)
-		log.Println(hit.Type, hit.Id, hitLyricsBody.Title)
+		s.logger.Info("search result row", zap.String("type", hit.Type), zap.String("id", hit.Id), zap.String("title", hitLyricsBody.Title))
 	}
-	log.Printf("Results %v", searchResult.Hits.TotalHits.Value)
+
+	s.logger.Info("result", zap.Int64("totalHits", searchResult.Hits.TotalHits.Value))
 	return lyricsResults, nil
+}
+
+// CreateIndexIfNotExist To check ES Index and create it if it doesn't exist.
+func (s *Service) createIndexIfNotExist(ctx context.Context) error {
+	exists, err := s.esClient.IndexExists(s.indexName).Do(ctx)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		s.logger.Info("index doesn't exist, creating a new one", zap.String("indexNAme", s.indexName))
+		if _, err := s.esClient.CreateIndex(s.indexName).Body(mapping).Do(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Service) deleteByIndex(ctx context.Context, itemID string) (err error) {
+	res, err := s.esClient.Delete().Index(s.indexName).Id(itemID).Do(ctx)
+	if err != nil {
+		return err
+	}
+	s.logger.Info("delete response", zap.String("response", res.Result))
+	return nil
 }

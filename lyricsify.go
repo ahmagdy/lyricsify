@@ -3,20 +3,20 @@ package lyricsify
 import (
 	"context"
 
-	"github.com/Ahmad-Magdy/lyricsify/search"
 	lyricsscraping "github.com/Ahmad-Magdy/lyricsify/scraping"
+	"github.com/Ahmad-Magdy/lyricsify/search"
 	"github.com/Ahmad-Magdy/lyricsify/spotify"
 )
 
 // Lyricsify Main package service
 type Lyricsify struct {
-	spotifyService *spotify.SpotifyService
-	scraper        *lyricsscraping.LyricsScrapingService
-	elasticClient  *search.LyricsSearchService
+	spotifyService *spotify.Service
+	scraper        *lyricsscraping.Service
+	elasticClient  *search.Service
 }
 
 // New To create a new instance of Lyricsify
-func New(spotifyService *spotify.SpotifyService, scraper *lyricsscraping.LyricsScrapingService, elasticClient *search.LyricsSearchService) *Lyricsify {
+func New(spotifyService *spotify.Service, scraper *lyricsscraping.Service, elasticClient *search.Service) *Lyricsify {
 	return &Lyricsify{spotifyService, scraper, elasticClient}
 }
 
@@ -44,9 +44,9 @@ func (lyricsService *Lyricsify) SearchByText(ctx context.Context, text string) (
 	return results, err
 }
 
-func(lyricsService *Lyricsify) IsLyricsExist(ctx context.Context, title string) (bool, error){
-	id, err:= 	lyricsService.elasticClient.GetItemID(ctx, title)
-	if err != nil{
+func (lyricsService *Lyricsify) IsLyricsExist(ctx context.Context, title string) (bool, error) {
+	id, err := lyricsService.elasticClient.GetItemID(ctx, title)
+	if err != nil {
 		return false, err
 	}
 	return id != "", nil
