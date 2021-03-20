@@ -8,11 +8,11 @@ require (
 	github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/google/wire v0.5.0
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
-	github.com/olivere/elastic v6.2.27+incompatible // indirect
 	github.com/olivere/elastic/v7 v7.0.22
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/spf13/afero v1.5.1 // indirect
