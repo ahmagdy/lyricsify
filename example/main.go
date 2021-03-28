@@ -55,13 +55,13 @@ func loadSongs(ctx context.Context, l *lyricsify.Service) error {
 				return
 			}
 
-			lyrics, err := l.FetchLyrics(ctx, song, artists)
+			lyrics, err := l.Fetch(ctx, song, artists)
 			if err != nil {
 				combinedErr = multierror.Append(combinedErr, err)
 				return
 			}
 
-			err = l.SaveLyrics(ctx, song, lyrics)
+			err = l.Save(ctx, song, lyrics)
 			combinedErr = multierror.Append(combinedErr, err)
 		}(song, artists)
 	}
@@ -72,7 +72,7 @@ func loadSongs(ctx context.Context, l *lyricsify.Service) error {
 	}
 	log.Println(strings.Repeat("-", 5), "Done! ", strings.Repeat("-", 5))
 
-	searchResults, err := l.SearchByText(ctx, "Did you work real hard")
+	searchResults, err := l.Search(ctx, "Did you work real hard")
 	if err != nil {
 		return err
 	}

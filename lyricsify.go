@@ -21,25 +21,25 @@ func New(spotifyService *spotify.Service, scraper *scraper.Service, elasticClien
 }
 
 // LoadSongs To load all songs from "LikedSongs" section in spotify
-func (s *Service) LoadSongs(ctx context.Context) (songsMap map[string]string, err error) {
+func (s *Service) LoadSongs(ctx context.Context) (map[string]string, error) {
 	allSongs, err := s.spotifyService.AllLikedSongs(ctx)
 	return allSongs, err
 }
 
-// FetchLyrics To fetch song lyrics from the scraper
-func (s *Service) FetchLyrics(ctx context.Context, songName string, artists string) (lyrics string, err error) {
+// Fetch To fetch song lyrics from the scraper
+func (s *Service) Fetch(ctx context.Context, songName string, artists string) (string, error) {
 	lyricsContent, err := s.scraper.Lyrics(ctx, songName, artists)
 	return lyricsContent, err
 }
 
-// SaveLyrics to save lyrics in a datastore in this case elasticsearch
-func (s *Service) SaveLyrics(ctx context.Context, title string, lyrics string) (err error) {
-	err = s.elasticClient.Create(ctx, title, lyrics)
+// Save to save lyrics in a datastore in this case elasticsearch
+func (s *Service) Save(ctx context.Context, title string, lyrics string) error {
+	err := s.elasticClient.Create(ctx, title, lyrics)
 	return err
 }
 
-// SearchByText to search in the saved songs by text
-func (s *Service) SearchByText(ctx context.Context, text string) (res []search.LyricsBody, err error) {
+// Search to search in the saved songs by text
+func (s *Service) Search(ctx context.Context, text string) ([]search.LyricsBody, error) {
 	results, err := s.elasticClient.Search(ctx, text)
 	return results, err
 }
