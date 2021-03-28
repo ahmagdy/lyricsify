@@ -1,4 +1,4 @@
-package models
+package types
 
 // Track  object response for track
 type Track struct {

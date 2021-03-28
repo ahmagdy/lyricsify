@@ -1,4 +1,4 @@
-package models
+package types
 
 // GeniusResponse The results of calling genius api
 type GeniusResponse struct {

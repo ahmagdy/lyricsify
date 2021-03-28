@@ -5,20 +5,34 @@ package lyricsify
 import (
 	"context"
 
-	"github.com/Ahmad-Magdy/lyricsify/elasticclient"
-	config "github.com/Ahmad-Magdy/lyricsify/internal"
-
-	scrapping "github.com/Ahmad-Magdy/lyricsify/scraping"
-	"github.com/Ahmad-Magdy/lyricsify/spotifyservice"
+	config "github.com/Ahmad-Magdy/lyricsify/config"
+	scrapping "github.com/Ahmad-Magdy/lyricsify/scraper"
+	"github.com/Ahmad-Magdy/lyricsify/search"
+	"github.com/Ahmad-Magdy/lyricsify/spotify"
 	"github.com/google/wire"
+	"github.com/olivere/elastic/v7"
+	"go.uber.org/zap"
 )
 
-func InitializeLyricsify(ctx context.Context) *Lyricsify {
+func InitializeLyricsify(ctx context.Context) (*Service, error) {
 	wire.Build(
-		config.NewConfig,
-		spotifyservice.New,
+		createLogger,
+		createElasticClient,
+		config.New,
+		spotify.New,
 		scrapping.New,
-		elasticclient.New,
-		NewLyricsifyService)
-	return &Lyricsify{}
+		search.New,
+		New)
+	return &Service{}, nil
+}
+
+func createLogger() (*zap.Logger, error) {
+	return zap.NewProduction()
+}
+
+func createElasticClient() (*elastic.Client, error) {
+	return elastic.NewClient(
+		elastic.SetSniff(false),
+		elastic.SetRetrier(elastic.NewBackoffRetrier(elastic.NewSimpleBackoff(100, 200))),
+	)
 }
