@@ -18,14 +18,16 @@ var wg sync.WaitGroup
 func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
-	lyricsify := lyricsify.InitializeLyricsify(ctx)
-
-	if err := loadSongs(ctx, lyricsify); err != nil {
+	svc, err := lyricsify.InitializeLyricsify(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := loadSongs(ctx, svc); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func loadSongs(ctx context.Context, l *lyricsify.Lyricsify) error {
+func loadSongs(ctx context.Context, l *lyricsify.Service) error {
 	songsMap, err := l.LoadSongs(ctx)
 	if err != nil {
 		return err
@@ -43,7 +45,7 @@ func loadSongs(ctx context.Context, l *lyricsify.Lyricsify) error {
 
 			log.Println(song, artists)
 
-			isExist, err := l.IsLyricsExist(ctx, song)
+			isExist, err := l.HasLyrics(ctx, song)
 			if err != nil {
 				combinedErr = multierror.Append(combinedErr, err)
 				return

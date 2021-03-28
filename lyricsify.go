@@ -3,49 +3,49 @@ package lyricsify
 import (
 	"context"
 
-	lyricsscraping "github.com/Ahmad-Magdy/lyricsify/scraping"
+	scraper "github.com/Ahmad-Magdy/lyricsify/scraper"
 	"github.com/Ahmad-Magdy/lyricsify/search"
 	"github.com/Ahmad-Magdy/lyricsify/spotify"
 )
 
-// Lyricsify Main package service
-type Lyricsify struct {
+// Service Main package service
+type Service struct {
 	spotifyService *spotify.Service
-	scraper        *lyricsscraping.Service
+	scraper        *scraper.Service
 	elasticClient  *search.Service
 }
 
-// New To create a new instance of Lyricsify
-func New(spotifyService *spotify.Service, scraper *lyricsscraping.Service, elasticClient *search.Service) *Lyricsify {
-	return &Lyricsify{spotifyService, scraper, elasticClient}
+// New To create a new instance of Service
+func New(spotifyService *spotify.Service, scraper *scraper.Service, elasticClient *search.Service) *Service {
+	return &Service{spotifyService, scraper, elasticClient}
 }
 
 // LoadSongs To load all songs from "LikedSongs" section in spotify
-func (lyricsService *Lyricsify) LoadSongs(ctx context.Context) (songsMap map[string]string, err error) {
-	allSongs, err := lyricsService.spotifyService.GetAllLikedSongs(ctx)
+func (s *Service) LoadSongs(ctx context.Context) (songsMap map[string]string, err error) {
+	allSongs, err := s.spotifyService.AllLikedSongs(ctx)
 	return allSongs, err
 }
 
 // FetchLyrics To fetch song lyrics from the scraper
-func (lyricsService *Lyricsify) FetchLyrics(ctx context.Context, songName string, artists string) (lyrics string, err error) {
-	lyricsContent, err := lyricsService.scraper.GetLyricsForSong(ctx, songName, artists)
+func (s *Service) FetchLyrics(ctx context.Context, songName string, artists string) (lyrics string, err error) {
+	lyricsContent, err := s.scraper.Lyrics(ctx, songName, artists)
 	return lyricsContent, err
 }
 
 // SaveLyrics to save lyrics in a datastore in this case elasticsearch
-func (lyricsService *Lyricsify) SaveLyrics(ctx context.Context, title string, lyrics string) (err error) {
-	err = lyricsService.elasticClient.Create(ctx, title, lyrics)
+func (s *Service) SaveLyrics(ctx context.Context, title string, lyrics string) (err error) {
+	err = s.elasticClient.Create(ctx, title, lyrics)
 	return err
 }
 
 // SearchByText to search in the saved songs by text
-func (lyricsService *Lyricsify) SearchByText(ctx context.Context, text string) (res []search.LyricsBody, err error) {
-	results, err := lyricsService.elasticClient.Search(ctx, text)
+func (s *Service) SearchByText(ctx context.Context, text string) (res []search.LyricsBody, err error) {
+	results, err := s.elasticClient.Search(ctx, text)
 	return results, err
 }
 
-func (lyricsService *Lyricsify) IsLyricsExist(ctx context.Context, title string) (bool, error) {
-	id, err := lyricsService.elasticClient.GetItemID(ctx, title)
+func (s *Service) HasLyrics(ctx context.Context, title string) (bool, error) {
+	id, err := s.elasticClient.GetItemID(ctx, title)
 	if err != nil {
 		return false, err
 	}

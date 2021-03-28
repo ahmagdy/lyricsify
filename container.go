@@ -6,7 +6,7 @@ import (
 	"context"
 
 	config "github.com/Ahmad-Magdy/lyricsify/config"
-	scrapping "github.com/Ahmad-Magdy/lyricsify/scraping"
+	scrapping "github.com/Ahmad-Magdy/lyricsify/scraper"
 	"github.com/Ahmad-Magdy/lyricsify/search"
 	"github.com/Ahmad-Magdy/lyricsify/spotify"
 	"github.com/google/wire"
@@ -14,7 +14,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func InitializeLyricsify(ctx context.Context) (*Lyricsify, error) {
+func InitializeLyricsify(ctx context.Context) (*Service, error) {
 	wire.Build(
 		createLogger,
 		createElasticClient,
@@ -23,7 +23,7 @@ func InitializeLyricsify(ctx context.Context) (*Lyricsify, error) {
 		scrapping.New,
 		search.New,
 		New)
-	return &Lyricsify{}, nil
+	return &Service{}, nil
 }
 
 func createLogger() (*zap.Logger, error) {

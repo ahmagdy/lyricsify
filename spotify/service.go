@@ -28,8 +28,8 @@ func New(config *config.Config) *Service {
 	return &Service{_spotifyBaseURL, config}
 }
 
-// GetAllSongs to get all liked songs from spotify Me list return a map of string and string, the key is the song name and the value is the artists name
-func (s *Service) GetAllLikedSongs(ctx context.Context) (map[string]string, error) {
+// AllLikedSongs to get all liked songs from spotify Me list return a map of string and string, the key is the song name and the value is the artists name
+func (s *Service) AllLikedSongs(ctx context.Context) (map[string]string, error) {
 	songs := make(map[string]string)
 	reqURL := fmt.Sprintf("%v/me/tracks", s.spotifyAPIUrl)
 	for {
@@ -41,6 +41,7 @@ func (s *Service) GetAllLikedSongs(ctx context.Context) (map[string]string, erro
 		for _, trackRes := range trackResponse.Items {
 			songs[trackRes.Track.Name] = s.artistsName(trackRes.Track.Artists)
 		}
+
 		if len(trackResponse.Next) == 0 {
 			break
 		}

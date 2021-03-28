@@ -1,4 +1,4 @@
-package scrapping
+package scraper
 
 import (
 	"context"
@@ -16,8 +16,10 @@ import (
 	"go.uber.org/zap"
 )
 
-var ErrGeniusTokenNotSet = errors.New("genius token is not set")
-var ErrRequestFailed = errors.New("request failed with non-success code")
+var (
+	ErrGeniusTokenNotSet = errors.New("genius token is not set")
+	ErrRequestFailed     = errors.New("request failed with non-success code")
+)
 
 // Service a service to scrap song lyrics from the internet
 type Service struct {
@@ -26,7 +28,7 @@ type Service struct {
 	baseSearchURL string
 }
 
-// New creates a new instance of lyrics scraping service
+// New creates a new instance of lyrics scraper service
 func New(config *config.Config, logger *zap.Logger) *Service {
 	return &Service{
 		logger:        logger,
@@ -35,9 +37,9 @@ func New(config *config.Config, logger *zap.Logger) *Service {
 	}
 }
 
-// GetLyricsForSong Get song lyrics
-func (s *Service) GetLyricsForSong(ctx context.Context, songName string, artists string) (lyricsText string, err error) {
-	songInfo, err := s.getSongLyricsResults(ctx, songName, artists)
+// Lyrics Get song lyrics
+func (s *Service) Lyrics(ctx context.Context, songName string, artists string) (string, error) {
+	songInfo, err := s.songLyricsResults(ctx, songName, artists)
 	if songInfo.Type == "" {
 		return "", fmt.Errorf("couldn't find lyriccs for song %v", songName)
 	}
@@ -63,8 +65,8 @@ func (s *Service) GetLyricsForSong(ctx context.Context, songName string, artists
 	return lyrics, nil
 }
 
-// getSongLyricsResults Search for a song lyrics and get the results list of the search. It doesn't contain the actual lyrics
-func (s *Service) getSongLyricsResults(ctx context.Context, songName string, artists string) (searchResults *types.SearchResult, err error) {
+// songLyricsResults Search for a song lyrics and get the results list of the search. It doesn't contain the actual lyrics
+func (s *Service) songLyricsResults(ctx context.Context, songName string, artists string) (*types.SearchResult, error) {
 	geniusAccessToken := s.config.GeniusToken
 	if geniusAccessToken == "" {
 		return &types.SearchResult{}, ErrGeniusTokenNotSet
@@ -86,7 +88,7 @@ func (s *Service) getSongLyricsResults(ctx context.Context, songName string, art
 		return &types.SearchResult{}, err
 	}
 	if res.StatusCode != 200 {
-		s.logger.Error("getSongLyricsResults: request exited with non-success code",
+		s.logger.Error("songLyricsResults: request exited with non-success code",
 			zap.String("url", res.Request.URL.String()), zap.Int("statusCode", res.StatusCode))
 		return &types.SearchResult{}, ErrRequestFailed
 	}

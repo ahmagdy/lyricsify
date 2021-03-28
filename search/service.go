@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const mapping = `
+const _mapping = `
 {
 	"settings":{
 		"number_of_shards": 1,
@@ -148,7 +148,7 @@ func (s *Service) createIndexIfNotExist(ctx context.Context) error {
 	}
 	if !exists {
 		s.logger.Info("index doesn't exist, creating a new one", zap.String("indexNAme", s.indexName))
-		if _, err := s.esClient.CreateIndex(s.indexName).Body(mapping).Do(ctx); err != nil {
+		if _, err := s.esClient.CreateIndex(s.indexName).Body(_mapping).Do(ctx); err != nil {
 			return err
 		}
 	}

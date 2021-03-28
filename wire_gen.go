@@ -7,8 +7,9 @@ package lyricsify
 
 import (
 	"context"
+
 	"github.com/Ahmad-Magdy/lyricsify/config"
-	"github.com/Ahmad-Magdy/lyricsify/scraping"
+	scrapping "github.com/Ahmad-Magdy/lyricsify/scraper"
 	"github.com/Ahmad-Magdy/lyricsify/search"
 	"github.com/Ahmad-Magdy/lyricsify/spotify"
 	"github.com/olivere/elastic/v7"
@@ -17,7 +18,7 @@ import (
 
 // Injectors from container.go:
 
-func InitializeLyricsify(ctx context.Context) (*Lyricsify, error) {
+func InitializeLyricsify(ctx context.Context) (*Service, error) {
 	configConfig, err := config.New()
 	if err != nil {
 		return nil, err
