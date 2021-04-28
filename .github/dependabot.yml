@@ -1,0 +1,22 @@
+version: 2
+updates:
+- package-ecosystem: gomod
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "04:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: github.com/olivere/elastic/v7
+    versions:
+    - 7.0.22
+    - 7.0.23
+  - dependency-name: github.com/google/wire
+    versions:
+    - 0.5.0
+  - dependency-name: github.com/PuerkitoBio/goquery
+    versions:
+    - 1.6.1
+  - dependency-name: github.com/spf13/viper
+    versions:
+    - 1.7.1
