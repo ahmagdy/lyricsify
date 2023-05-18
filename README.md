@@ -12,7 +12,7 @@ This tool should solve your problem because it will load all of your lyrics and 
 - [Viper](https://github.com/spf13/viper)
 
 ## How to use it
-Consider checking [example](https://github.com/Ahmad-Magdy/lyricsify/blob/master/example/main.go) folder.
+Consider checking [example](https://github.com/ahmagdy/lyricsify/blob/master/example/main.go) folder.
 
 #### Config
 Expected values to be set as Environment Variables or in a YAML file in the Documents folder.
@@ -46,4 +46,4 @@ docker-compose up
 
 
 ## License:
-[The MIT License](https://github.com/Ahmad-Magdy/lyricsify/blob/master/LICENSE)
+[The MIT License](https://github.com/ahmagdy/lyricsify/blob/master/LICENSE)

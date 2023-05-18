@@ -4,21 +4,21 @@
 //go:build !wireinject
 // +build !wireinject
 
-package lyricsify
+package main
 
 import (
 	"context"
-	"github.com/Ahmad-Magdy/lyricsify/config"
-	"github.com/Ahmad-Magdy/lyricsify/scraper"
-	"github.com/Ahmad-Magdy/lyricsify/search"
-	"github.com/Ahmad-Magdy/lyricsify/spotify"
+	"github.com/ahmagdy/lyricsify/config"
+	"github.com/ahmagdy/lyricsify/scraper"
+	"github.com/ahmagdy/lyricsify/search"
+	"github.com/ahmagdy/lyricsify/spotify"
 	"github.com/olivere/elastic/v7"
 	"go.uber.org/zap"
 )
 
 // Injectors from container.go:
 
-func InitializeLyricsify(ctx context.Context) (*Service, error) {
+func New(ctx context.Context) (*Service, error) {
 	configConfig, err := config.New()
 	if err != nil {
 		return nil, err
@@ -37,8 +37,8 @@ func InitializeLyricsify(ctx context.Context) (*Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	lyricsifyService := New(service, scraperService, searchService)
-	return lyricsifyService, nil
+	mainService := new(service, scraperService, searchService)
+	return mainService, nil
 }
 
 // container.go:

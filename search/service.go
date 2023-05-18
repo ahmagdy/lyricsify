@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/Ahmad-Magdy/lyricsify/config"
+	"github.com/ahmagdy/lyricsify/config"
 	"github.com/olivere/elastic/v7"
 	"go.uber.org/zap"
 )

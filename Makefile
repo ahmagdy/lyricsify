@@ -2,6 +2,7 @@
 
 updatedep: 
 	go get -u ./...
+	go generate ./...
 run:
 	go run .
 test:
