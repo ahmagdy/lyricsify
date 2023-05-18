@@ -4,7 +4,7 @@
 //go:build !wireinject
 // +build !wireinject
 
-package main
+package lyricsify
 
 import (
 	"context"
@@ -37,8 +37,8 @@ func New(ctx context.Context) (*Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	mainService := new(service, scraperService, searchService)
-	return mainService, nil
+	lyricsifyService := new(service, scraperService, searchService)
+	return lyricsifyService, nil
 }
 
 // container.go:
