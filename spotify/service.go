@@ -2,93 +2,57 @@ package spotify
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"strings"
 
 	config "github.com/ahmagdy/lyricsify/config"
-	"github.com/ahmagdy/lyricsify/types"
+	"github.com/zmb3/spotify/v2"
 )
-
-const _spotifyBaseURL = "https://api.spotify.com/v1"
 
 var ErrSpotifyTokenNotSet = errors.New("spotify token is not set")
 
 // Service Service to communicate with spotify
 type Service struct {
-	spotifyAPIUrl string
+	spotifyClient *spotify.Client
 	config        *config.Config
 }
 
 // New create a new instance of Service
-func New(config *config.Config) *Service {
-	return &Service{_spotifyBaseURL, config}
+// TODO: replace client with client interface
+func New(config *config.Config, spotifyClient *spotify.Client) *Service {
+	return &Service{spotifyClient, config}
 }
 
 // AllLikedSongs to get all liked songs from spotify Me list return a map of string and string, the key is the song name and the value is the artists name
 func (s *Service) AllLikedSongs(ctx context.Context) (map[string]string, error) {
-	songs := make(map[string]string)
-	reqURL := fmt.Sprintf("%v/me/tracks", s.spotifyAPIUrl)
-	for {
-		trackResponse, err := s.songsList(ctx, reqURL)
-		if err != nil {
-			return nil, err
-		}
+	songToArtists := make(map[string]string)
 
-		for _, trackRes := range trackResponse.Items {
-			songs[trackRes.Track.Name] = s.artistsName(trackRes.Track.Artists)
-		}
-
-		if len(trackResponse.Next) == 0 {
-			break
-		}
-
-		reqURL = trackResponse.Next
+	userTracks, err := s.spotifyClient.CurrentUsersTracks(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("spotifyClient.CurrentUsersTracks: %w", err)
 	}
 
-	return songs, nil
+	for err == nil {
+		for _, track := range userTracks.Tracks {
+			songToArtists[track.Name] = s.artistsName(track.Artists)
+		}
+
+		err = s.spotifyClient.NextPage(ctx, userTracks)
+	}
+
+	if !errors.Is(err, spotify.ErrNoMorePages) {
+		return nil, fmt.Errorf("spotifyClient.NextPage: %w", err)
+	}
+
+	return songToArtists, nil
 }
 
-// songsList To get Me Songs list
-func (s *Service) songsList(ctx context.Context, reqURL string) (response types.MeTrackResponse, err error) {
-	req, err := http.NewRequest("GET", reqURL, nil)
-	if err != nil {
-		return types.MeTrackResponse{}, err
-	}
-
-	spotifyToken := s.config.SpotifyToken
-	if spotifyToken == "" {
-		return types.MeTrackResponse{}, ErrSpotifyTokenNotSet
-	}
-
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %v", spotifyToken))
-	req = req.WithContext(ctx)
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return types.MeTrackResponse{}, err
-	}
-
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return types.MeTrackResponse{}, err
-	}
-
-	if res.StatusCode != 200 {
-		return types.MeTrackResponse{}, fmt.Errorf("request with URL %v exit with code %v and text %v", res.Request.URL, res.StatusCode, string(body))
-	}
-	trackResponse := types.MeTrackResponse{}
-	json.Unmarshal(body, &trackResponse)
-	return trackResponse, nil
-}
-
-func (s *Service) artistsName(artistList []types.Artist) string {
+func (s *Service) artistsName(artists []spotify.SimpleArtist) string {
 	var artistsName []string
-	for _, item := range artistList {
-		artistsName = append(artistsName, item.Name)
+	for _, artist := range artists {
+		artistsName = append(artistsName, artist.Name)
 	}
+
 	return strings.Join(artistsName, ",")
 }

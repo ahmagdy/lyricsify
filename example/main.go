@@ -8,17 +8,33 @@ import (
 	"time"
 
 	"github.com/ahmagdy/lyricsify"
+	"github.com/ahmagdy/lyricsify/spotify"
 	"github.com/hashicorp/go-multierror"
+	"go.uber.org/zap"
 )
 
 type contextKey string
 
 var wg sync.WaitGroup
 
+const (
+	_ctxTimeout = 2 * time.Minute
+)
+
 func main() {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), _ctxTimeout)
 	defer cancel()
-	svc, err := lyricsify.New(ctx)
+
+	logger, _ := zap.NewProduction()
+	authServer := spotify.NewAuthServer(logger)
+	authServer.Start()
+	authServer.WaitForAuthToBeCompleted()
+
+	if err := authServer.Verify(ctx); err != nil {
+		// TODO: handle
+	}
+
+	svc, err := lyricsify.New(ctx, authServer.SpotifyClient())
 	if err != nil {
 		log.Fatal(err)
 	}

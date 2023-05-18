@@ -11,19 +11,20 @@ import (
 	"github.com/ahmagdy/lyricsify/config"
 	"github.com/ahmagdy/lyricsify/scraper"
 	"github.com/ahmagdy/lyricsify/search"
-	"github.com/ahmagdy/lyricsify/spotify"
+	spotify2 "github.com/ahmagdy/lyricsify/spotify"
 	"github.com/olivere/elastic/v7"
+	"github.com/zmb3/spotify/v2"
 	"go.uber.org/zap"
 )
 
 // Injectors from container.go:
 
-func New(ctx context.Context) (*Service, error) {
+func New(ctx context.Context, spotifyClient *spotify.Client) (*Service, error) {
 	configConfig, err := config.New()
 	if err != nil {
 		return nil, err
 	}
-	service := spotify.New(configConfig)
+	service := spotify2.New(configConfig, spotifyClient)
 	logger, err := createLogger()
 	if err != nil {
 		return nil, err

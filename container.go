@@ -9,18 +9,19 @@ import (
 	config "github.com/ahmagdy/lyricsify/config"
 	scrapping "github.com/ahmagdy/lyricsify/scraper"
 	"github.com/ahmagdy/lyricsify/search"
-	"github.com/ahmagdy/lyricsify/spotify"
+	spotifyService "github.com/ahmagdy/lyricsify/spotify"
 	"github.com/google/wire"
 	"github.com/olivere/elastic/v7"
+	"github.com/zmb3/spotify/v2"
 	"go.uber.org/zap"
 )
 
-func New(ctx context.Context) (*Service, error) {
+func New(ctx context.Context, spotifyClient *spotify.Client) (*Service, error) {
 	wire.Build(
 		createLogger,
 		createElasticClient,
 		config.New,
-		spotify.New,
+		spotifyService.New,
 		scrapping.New,
 		search.New,
 		new)
