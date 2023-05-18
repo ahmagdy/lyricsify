@@ -1,20 +1,21 @@
-//+build wireinject
+//go:build wireinject
+// +build wireinject
 
 package lyricsify
 
 import (
 	"context"
 
-	config "github.com/Ahmad-Magdy/lyricsify/config"
-	scrapping "github.com/Ahmad-Magdy/lyricsify/scraper"
-	"github.com/Ahmad-Magdy/lyricsify/search"
-	"github.com/Ahmad-Magdy/lyricsify/spotify"
+	config "github.com/ahmagdy/lyricsify/config"
+	scrapping "github.com/ahmagdy/lyricsify/scraper"
+	"github.com/ahmagdy/lyricsify/search"
+	"github.com/ahmagdy/lyricsify/spotify"
 	"github.com/google/wire"
 	"github.com/olivere/elastic/v7"
 	"go.uber.org/zap"
 )
 
-func InitializeLyricsify(ctx context.Context) (*Service, error) {
+func New(ctx context.Context) (*Service, error) {
 	wire.Build(
 		createLogger,
 		createElasticClient,
@@ -22,7 +23,7 @@ func InitializeLyricsify(ctx context.Context) (*Service, error) {
 		spotify.New,
 		scrapping.New,
 		search.New,
-		New)
+		new)
 	return &Service{}, nil
 }
 

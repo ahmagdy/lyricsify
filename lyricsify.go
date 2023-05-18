@@ -3,9 +3,9 @@ package lyricsify
 import (
 	"context"
 
-	scraper "github.com/Ahmad-Magdy/lyricsify/scraper"
-	"github.com/Ahmad-Magdy/lyricsify/search"
-	"github.com/Ahmad-Magdy/lyricsify/spotify"
+	scraper "github.com/ahmagdy/lyricsify/scraper"
+	"github.com/ahmagdy/lyricsify/search"
+	"github.com/ahmagdy/lyricsify/spotify"
 )
 
 // Service Main package service
@@ -16,7 +16,7 @@ type Service struct {
 }
 
 // New To create a new instance of Service
-func New(spotifyService *spotify.Service, scraper *scraper.Service, elasticClient *search.Service) *Service {
+func new(spotifyService *spotify.Service, scraper *scraper.Service, elasticClient *search.Service) *Service {
 	return &Service{spotifyService, scraper, elasticClient}
 }
 

@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Ahmad-Magdy/lyricsify"
+	"github.com/ahmagdy/lyricsify"
 	"github.com/hashicorp/go-multierror"
 )
 
@@ -18,7 +18,7 @@ var wg sync.WaitGroup
 func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
-	svc, err := lyricsify.InitializeLyricsify(ctx)
+	svc, err := lyricsify.New(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}

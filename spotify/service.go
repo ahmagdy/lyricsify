@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"strings"
 
-	config "github.com/Ahmad-Magdy/lyricsify/config"
-	"github.com/Ahmad-Magdy/lyricsify/types"
+	config "github.com/ahmagdy/lyricsify/config"
+	"github.com/ahmagdy/lyricsify/types"
 )
 
 const _spotifyBaseURL = "https://api.spotify.com/v1"

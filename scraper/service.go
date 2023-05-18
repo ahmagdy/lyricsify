@@ -10,9 +10,9 @@ import (
 	"os"
 	"strings"
 
-	config "github.com/Ahmad-Magdy/lyricsify/config"
-	"github.com/Ahmad-Magdy/lyricsify/types"
 	"github.com/PuerkitoBio/goquery"
+	config "github.com/ahmagdy/lyricsify/config"
+	"github.com/ahmagdy/lyricsify/types"
 	"go.uber.org/zap"
 )
 
