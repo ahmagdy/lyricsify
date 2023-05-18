@@ -6,6 +6,7 @@ import (
 
 	"net/http"
 
+	"github.com/ahmagdy/lyricsify/config"
 	"github.com/zmb3/spotify/v2"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
 	"go.uber.org/zap"
@@ -27,10 +28,16 @@ type authServer struct {
 	spotifyClient *spotify.Client
 }
 
-func NewAuthServer(logger *zap.Logger) *authServer {
+func NewAuthServer(logger *zap.Logger, cfg *config.Config) *authServer {
+	auth := spotifyauth.New(
+		spotifyauth.WithRedirectURL(redirectURI),
+		spotifyauth.WithScopes(spotifyauth.ScopeUserReadPrivate),
+		spotifyauth.WithClientID(cfg.SpotifyID),
+		spotifyauth.WithClientSecret(cfg.SpotifySecret),
+	)
 	return &authServer{
 		logger:        logger,
-		auth:          spotifyauth.New(spotifyauth.WithRedirectURL(redirectURI), spotifyauth.WithScopes(spotifyauth.ScopeUserReadPrivate)),
+		auth:          auth,
 		authCompleted: make(chan struct{}),
 	}
 }
