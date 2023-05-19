@@ -1,4 +1,4 @@
-.PHONY: run test updatedep
+.PHONY: run test updatedep d-up d-down
 
 updatedep: 
 	go get -u ./...
@@ -7,3 +7,8 @@ run:
 	go run .
 test:
 	go test -v ./...
+
+d-up:
+	docker-compose -f docker-compose.yaml up -d
+d-down:
+	docker-compose -f docker-compose.yaml down -v
