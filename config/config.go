@@ -9,7 +9,6 @@ type Config struct {
 	SpotifyID       string
 	SpotifySecret   string
 	GeniusToken     string
-	GeniusBaseURL   string
 }
 
 func New() (*Config, error) {
@@ -29,6 +28,5 @@ func New() (*Config, error) {
 		SpotifyID:       viperConfig.GetString("SPOTIFY_ID"),
 		SpotifySecret:   viperConfig.GetString("SPOTIFY_SECRET"),
 		GeniusToken:     viperConfig.GetString("GENIUS_TOKEN"),
-		GeniusBaseURL:   viperConfig.GetString("GENIUS_BASE_URL"),
 	}, nil
 }

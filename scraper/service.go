@@ -19,29 +19,31 @@ import (
 var (
 	ErrGeniusTokenNotSet = errors.New("genius token is not set")
 	ErrRequestFailed     = errors.New("request failed with non-success code")
+	_baseURL             = "https://api.genius.com/search"
 )
 
 // Service a service to scrap song lyrics from the internet
 type Service struct {
-	logger        *zap.Logger
-	config        *config.Config
-	baseSearchURL string
+	logger *zap.Logger
+	config *config.Config
 }
 
 // New creates a new instance of lyrics scraper service
 func New(config *config.Config, logger *zap.Logger) *Service {
 	return &Service{
-		logger:        logger,
-		config:        config,
-		baseSearchURL: config.GeniusBaseURL,
+		logger: logger,
+		config: config,
 	}
 }
 
 // Lyrics Get song lyrics
 func (s *Service) Lyrics(ctx context.Context, songName string, artists string) (string, error) {
 	songInfo, err := s.songLyricsResults(ctx, songName, artists)
+	if err != nil {
+		return "", fmt.Errorf("couldn't find lyriccs for song (%v): %w", songName, err)
+	}
 	if songInfo.Type == "" {
-		return "", fmt.Errorf("couldn't find lyriccs for song %v", songName)
+		return "", fmt.Errorf("couldn't find lyriccs for song (%v)", songName)
 	}
 
 	s.logger.Debug("Calling URL", zap.String("url", songInfo.Result.URL))
@@ -72,7 +74,7 @@ func (s *Service) songLyricsResults(ctx context.Context, songName string, artist
 		return &types.SearchResult{}, ErrGeniusTokenNotSet
 	}
 
-	req, err := http.NewRequest("GET", s.baseSearchURL, nil)
+	req, err := http.NewRequest("GET", _baseURL, nil)
 	if err != nil {
 		return nil, err
 	}
