@@ -31,7 +31,7 @@ type authServer struct {
 func NewAuthServer(logger *zap.Logger, cfg *config.Config) *authServer {
 	auth := spotifyauth.New(
 		spotifyauth.WithRedirectURL(redirectURI),
-		spotifyauth.WithScopes(spotifyauth.ScopeUserReadPrivate),
+		spotifyauth.WithScopes(spotifyauth.ScopeUserLibraryRead, spotifyauth.ScopeUserReadPrivate),
 		spotifyauth.WithClientID(cfg.SpotifyID),
 		spotifyauth.WithClientSecret(cfg.SpotifySecret),
 	)
