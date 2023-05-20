@@ -46,14 +46,14 @@ func main() {
 }
 
 func loadSongs(ctx context.Context, l *lyricsify.Service) error {
-	songsMap, err := l.LoadSongs(ctx)
+	songToArtists, err := l.LoadSongs(ctx)
 	if err != nil {
 		return err
 	}
 
 	var combinedErr error
 
-	for song, artists := range songsMap {
+	for song, artists := range songToArtists {
 		wg.Add(1)
 		go func(song string, artists string) {
 			defer wg.Done()
