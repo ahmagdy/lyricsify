@@ -9,7 +9,6 @@ import (
 
 	"github.com/ahmagdy/lyricsify"
 	"github.com/ahmagdy/lyricsify/config"
-	"github.com/ahmagdy/lyricsify/spotify"
 	"github.com/hashicorp/go-multierror"
 	"go.uber.org/zap"
 )
@@ -28,7 +27,7 @@ func main() {
 
 	logger, _ := zap.NewProduction()
 	cfg, _ := config.New()
-	authServer := spotify.NewAuthServer(logger, cfg)
+	authServer := lyricsify.NewAuthServer(logger, cfg)
 	authServer.Start()
 	authServer.WaitForAuthToBeCompleted()
 

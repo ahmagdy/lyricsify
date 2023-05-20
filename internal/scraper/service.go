@@ -12,7 +12,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	config "github.com/ahmagdy/lyricsify/config"
-	"github.com/ahmagdy/lyricsify/types"
+	"github.com/ahmagdy/lyricsify/internal/types"
 	"go.uber.org/zap"
 )
 

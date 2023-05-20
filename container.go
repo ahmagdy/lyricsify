@@ -7,9 +7,9 @@ import (
 	"context"
 
 	config "github.com/ahmagdy/lyricsify/config"
-	scrapping "github.com/ahmagdy/lyricsify/scraper"
-	"github.com/ahmagdy/lyricsify/search"
-	spotifyService "github.com/ahmagdy/lyricsify/spotify"
+	"github.com/ahmagdy/lyricsify/internal/scraper"
+	"github.com/ahmagdy/lyricsify/internal/search"
+	spotifyService "github.com/ahmagdy/lyricsify/internal/spotify"
 	"github.com/google/wire"
 	"github.com/olivere/elastic/v7"
 	"github.com/zmb3/spotify/v2"
@@ -22,7 +22,7 @@ func New(ctx context.Context, spotifyClient *spotify.Client) (*Service, error) {
 		createElasticClient,
 		config.New,
 		spotifyService.New,
-		scrapping.New,
+		scraper.New,
 		search.New,
 		new)
 	return &Service{}, nil

@@ -3,9 +3,9 @@ package lyricsify
 import (
 	"context"
 
-	scraper "github.com/ahmagdy/lyricsify/scraper"
-	"github.com/ahmagdy/lyricsify/search"
-	"github.com/ahmagdy/lyricsify/spotify"
+	scraper "github.com/ahmagdy/lyricsify/internal/scraper"
+	"github.com/ahmagdy/lyricsify/internal/search"
+	"github.com/ahmagdy/lyricsify/internal/spotify"
 )
 
 // Service Main package service

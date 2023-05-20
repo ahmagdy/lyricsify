@@ -3,8 +3,8 @@
 updatedep: 
 	go get -u ./...
 	go generate ./...
-run:
-	go run .
+run-example:
+	go run example/main.go
 test:
 	go test -v ./...
 

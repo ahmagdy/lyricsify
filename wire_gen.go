@@ -9,9 +9,9 @@ package lyricsify
 import (
 	"context"
 	"github.com/ahmagdy/lyricsify/config"
-	"github.com/ahmagdy/lyricsify/scraper"
-	"github.com/ahmagdy/lyricsify/search"
-	spotify2 "github.com/ahmagdy/lyricsify/spotify"
+	"github.com/ahmagdy/lyricsify/internal/scraper"
+	"github.com/ahmagdy/lyricsify/internal/search"
+	spotify2 "github.com/ahmagdy/lyricsify/internal/spotify"
 	"github.com/olivere/elastic/v7"
 	"github.com/zmb3/spotify/v2"
 	"go.uber.org/zap"
