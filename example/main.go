@@ -3,19 +3,15 @@ package main
 import (
 	"context"
 	"log"
-	"strings"
-	"sync"
 	"time"
 
 	"github.com/ahmagdy/lyricsify"
 	"github.com/ahmagdy/lyricsify/config"
-	"github.com/hashicorp/go-multierror"
+	"github.com/sourcegraph/conc/pool"
 	"go.uber.org/zap"
 )
 
 type contextKey string
-
-var wg sync.WaitGroup
 
 const (
 	_ctxTimeout = 2 * time.Minute
@@ -39,63 +35,62 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := loadSongs(ctx, svc); err != nil {
+	if err := loadSongs(ctx, svc, logger); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func loadSongs(ctx context.Context, l *lyricsify.Service) error {
-	songToArtists, err := l.LoadSongs(ctx)
+func loadSongs(ctx context.Context, s *lyricsify.Service, logger *zap.Logger) error {
+	songToArtists, err := s.LoadSongs(ctx)
 	if err != nil {
 		return err
 	}
 
-	var combinedErr error
+	p := pool.New().WithErrors()
 
 	for song, artists := range songToArtists {
-		wg.Add(1)
-		go func(song string, artists string) {
-			defer wg.Done()
-
+		song := song
+		artists := artists
+		p.Go(func() error {
 			ctxKey := contextKey(song)
 			ctx := context.WithValue(ctx, ctxKey, song)
 
-			log.Println(song, artists)
+			logger.Info("Checking song", zap.String("songName", song), zap.String("artists", artists))
 
-			isExist, err := l.HasLyrics(ctx, song)
+			isExist, err := s.HasLyrics(ctx, song)
 			if err != nil {
-				combinedErr = multierror.Append(combinedErr, err)
-				return
+				return err
 			}
+
 			if isExist {
-				log.Printf("Skipping song %v since it's already exist in the datastore", song)
-				return
+				logger.Info("Skipping song as it already exist in the datastore", zap.String("songName", song))
+				return nil
 			}
 
-			lyrics, err := l.Fetch(ctx, song, artists)
+			lyrics, err := s.Fetch(ctx, song, artists)
 			if err != nil {
-				combinedErr = multierror.Append(combinedErr, err)
-				return
+				return err
 			}
 
-			err = l.Save(ctx, song, lyrics)
-			combinedErr = multierror.Append(combinedErr, err)
-		}(song, artists)
+			return s.Save(ctx, song, lyrics)
+		})
 	}
 
-	wg.Wait()
-	if combinedErr != nil {
-		return combinedErr
+	if err := p.Wait(); err != nil {
+		// fail open for now
+		// return err
+		logger.Error("received the following error when loading titles", zap.Error(err))
 	}
-	log.Println(strings.Repeat("-", 5), "Done! ", strings.Repeat("-", 5))
 
-	searchResults, err := l.Search(ctx, "Did you work real hard")
+	logger.Info("done")
+
+	searchResults, err := s.Search(ctx, "Did you work real hard")
 	if err != nil {
 		return err
 	}
 
 	for _, result := range searchResults {
-		log.Println(result.Title)
+		logger.Info("search results", zap.String("candidateTitle", result.Title))
 	}
 
 	return nil
