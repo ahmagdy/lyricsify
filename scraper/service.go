@@ -19,36 +19,42 @@ import (
 var (
 	ErrGeniusTokenNotSet = errors.New("genius token is not set")
 	ErrRequestFailed     = errors.New("request failed with non-success code")
+	errZeroHits          = errors.New("received zero hits")
+	errNoMatchingTag     = errors.New("could not find a matching tag for the lyrics content")
 	_baseURL             = "https://api.genius.com/search"
 )
 
 // Service a service to scrap song lyrics from the internet
 type Service struct {
-	logger *zap.Logger
-	config *config.Config
+	logger            *zap.Logger
+	config            *config.Config
+	geniusAccessToken string
 }
 
 // New creates a new instance of lyrics scraper service
-func New(config *config.Config, logger *zap.Logger) *Service {
-	return &Service{
-		logger: logger,
-		config: config,
+func New(config *config.Config, logger *zap.Logger) (*Service, error) {
+	geniusAccessToken := config.GeniusToken
+	if geniusAccessToken == "" {
+		return nil, ErrGeniusTokenNotSet
 	}
+
+	return &Service{
+		logger:            logger,
+		config:            config,
+		geniusAccessToken: geniusAccessToken,
+	}, nil
 }
 
-// Lyrics Get song lyrics
-func (s *Service) Lyrics(ctx context.Context, songName string, artists string) (string, error) {
-	songInfo, err := s.songLyricsResults(ctx, songName, artists)
+// FindLyrics Get song lyrics
+func (s *Service) FindLyrics(ctx context.Context, songName string, artists string) (string, error) {
+	lyricsURL, err := s.fetchSongLyricsResults(ctx, songName, artists)
 	if err != nil {
-		return "", fmt.Errorf("couldn't find lyriccs for song (%v): %w", songName, err)
-	}
-	if songInfo.Type == "" {
-		return "", fmt.Errorf("couldn't find lyriccs for song (%v)", songName)
+		return "", fmt.Errorf("couldn't find lyrics for song (%v): %w", songName, err)
 	}
 
-	s.logger.Debug("Calling URL", zap.String("url", songInfo.Result.URL))
+	s.logger.Debug("Calling URL", zap.String("url", lyricsURL))
 
-	res, err := http.Get(songInfo.Result.URL)
+	res, err := http.Get(lyricsURL)
 	if err != nil {
 		return "", err
 	}
@@ -60,66 +66,79 @@ func (s *Service) Lyrics(ctx context.Context, songName string, artists string) (
 	}
 
 	var lyrics string
-	doc.Find("div.lyrics").Each(func(i int, s *goquery.Selection) {
+	doc.Find(`div[class^="Lyrics__Container-"]`).Each(func(i int, s *goquery.Selection) {
 		lyrics = s.Text()
 	})
+
+	if lyrics == "" {
+		return "", errNoMatchingTag
+	}
 
 	return lyrics, nil
 }
 
-// songLyricsResults Search for a song lyrics and get the results list of the search. It doesn't contain the actual lyrics
-func (s *Service) songLyricsResults(ctx context.Context, songName string, artists string) (*types.SearchResult, error) {
-	geniusAccessToken := s.config.GeniusToken
-	if geniusAccessToken == "" {
-		return &types.SearchResult{}, ErrGeniusTokenNotSet
-	}
-
+// fetchSongLyricsResults returns the URLs lyrics search results that matches the song.
+func (s *Service) fetchSongLyricsResults(ctx context.Context, songName string, artists string) (string, error) {
 	req, err := http.NewRequest("GET", _baseURL, nil)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	queryParams := req.URL.Query()
 	queryParams.Add("q", fmt.Sprintf("%s %s", songName, artists))
 	req.URL.RawQuery = queryParams.Encode()
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %v", geniusAccessToken))
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %v", s.geniusAccessToken))
 	req = req.WithContext(ctx)
+
+	s.logger.Info("calling URL for song lyrics", zap.String("URL", req.URL.String()))
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return &types.SearchResult{}, err
+		return "", err
 	}
+
 	if res.StatusCode != 200 {
 		s.logger.Error("songLyricsResults: request exited with non-success code",
-			zap.String("url", res.Request.URL.String()), zap.Int("statusCode", res.StatusCode))
-		return &types.SearchResult{}, ErrRequestFailed
+			zap.Any("response", res),
+			zap.String("url", res.Request.URL.String()),
+			zap.Int("statusCode", res.StatusCode),
+		)
+		return "", ErrRequestFailed
 	}
 
 	var geniusResponse types.GeniusResponse
 	err = json.NewDecoder(res.Body).Decode(&geniusResponse)
 	if err != nil {
-		return &types.SearchResult{}, err
+		return "", fmt.Errorf("json.NewDecoder: %w", err)
 	}
 
-	var songSearchResult types.SearchResult
-	singersList := strings.Split(artists, ",")
-	breakOuterLoop := false
+	if len(geniusResponse.Response.Hits) == 0 {
+		return "", errZeroHits
+	}
+
+	matchingURL, ok := s.findSongLyricsURLInResponse(artists, geniusResponse)
+
+	if !ok {
+		return "", fmt.Errorf("could not find matching lyrics for the song (%s)", songName)
+	}
+
+	return matchingURL, nil
+}
+
+func (s *Service) findSongLyricsURLInResponse(artists string, geniusResponse types.GeniusResponse) (string, bool /* ok */) {
+	splitArtists := strings.Split(artists, ",")
+
 	for _, hitItem := range geniusResponse.Response.Hits {
-		for _, singer := range singersList {
-			if strings.Contains(hitItem.Result.PrimaryArtist.Name, singer) {
-				s.logger.Debug("found singer as part ", zap.String("singer", singer), zap.String("geniusArtist", hitItem.Result.PrimaryArtist.Name))
-				songSearchResult = hitItem
-				breakOuterLoop = true
-				break
+		for _, artist := range splitArtists {
+			if !strings.Contains(hitItem.Result.PrimaryArtist.Name, artist) {
+				continue
 			}
-		}
-		if breakOuterLoop {
-			break
+			s.logger.Debug("found artist as part ", zap.String("artist", artist), zap.String("geniusArtist", hitItem.Result.PrimaryArtist.Name))
+			return hitItem.Result.URL, true
 		}
 
 	}
-
-	return &songSearchResult, nil
+	return "", false
 }
 
 func LoadCSV() ([][]string, error) {

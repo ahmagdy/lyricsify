@@ -28,7 +28,7 @@ func (s *Service) LoadSongs(ctx context.Context) (map[string]string, error) {
 
 // Fetch To fetch song lyrics from the scraper
 func (s *Service) Fetch(ctx context.Context, songName string, artists string) (string, error) {
-	lyricsContent, err := s.scraper.Lyrics(ctx, songName, artists)
+	lyricsContent, err := s.scraper.FindLyrics(ctx, songName, artists)
 	return lyricsContent, err
 }
 
