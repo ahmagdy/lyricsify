@@ -79,7 +79,7 @@ func (s *Service) FindLyrics(ctx context.Context, songName string, artists strin
 
 // fetchSongLyricsResults returns the URLs lyrics search results that matches the song.
 func (s *Service) fetchSongLyricsResults(ctx context.Context, songName string, artists string) (string, error) {
-	req, err := http.NewRequest("GET", _baseURL, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", _baseURL, nil)
 	if err != nil {
 		return "", err
 	}
@@ -88,9 +88,8 @@ func (s *Service) fetchSongLyricsResults(ctx context.Context, songName string, a
 	queryParams.Add("q", fmt.Sprintf("%s %s", songName, artists))
 	req.URL.RawQuery = queryParams.Encode()
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %v", s.geniusAccessToken))
-	req = req.WithContext(ctx)
 
-	s.logger.Info("calling URL for song lyrics", zap.String("URL", req.URL.String()))
+	s.logger.Debug("calling URL for song lyrics", zap.String("URL", req.URL.String()))
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {

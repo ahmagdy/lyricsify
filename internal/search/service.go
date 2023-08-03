@@ -3,6 +3,7 @@ package search
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/ahmagdy/lyricsify/config"
 	"github.com/olivere/elastic/v7"
@@ -46,7 +47,7 @@ func New(ctx context.Context, config *config.Config, client *elastic.Client, log
 	// TODO [ahmed]: This shouldn't be placed here
 	err := esClient.createIndexIfNotExist(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create index: %w", err)
 	}
 	return esClient, err
 }
@@ -58,7 +59,7 @@ func (s *Service) Create(ctx context.Context, title string, content string) erro
 		BodyJson(LyricsBody{title, content}).
 		Do(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("esClient.Index: %w", err)
 	}
 
 	s.logger.Info("Created item with ID", zap.String("id", res.Id))
@@ -98,7 +99,7 @@ func (s *Service) GetItemID(ctx context.Context, title string) (id string, err e
 		Pretty(true).
 		Do(ctx)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("esClient.Search: %w", err)
 	}
 
 	s.logger.Info("Item search match", zap.Int64("hits", searchResult.TotalHits()))
@@ -113,7 +114,6 @@ func (s *Service) GetItemID(ctx context.Context, title string) (id string, err e
 
 // Search to search for song lyrics across ES Index.
 func (s *Service) Search(ctx context.Context, text string) (lyrics []LyricsBody, err error) {
-	//termQuery := elastic.NewTermQuery("content", "All Around The World")
 	matchQuery := elastic.NewMultiMatchQuery(text, "title", "content").Type("phrase_prefix")
 
 	searchResult, err := s.esClient.Search().
@@ -122,7 +122,7 @@ func (s *Service) Search(ctx context.Context, text string) (lyrics []LyricsBody,
 		Pretty(true).
 		Do(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("esClient.Search: %w", err)
 	}
 
 	var lyricsResults []LyricsBody
@@ -133,7 +133,7 @@ func (s *Service) Search(ctx context.Context, text string) (lyrics []LyricsBody,
 			return nil, err
 		}
 		lyricsResults = append(lyricsResults, hitLyricsBody)
-		s.logger.Info("search result row", zap.String("type", hit.Type), zap.String("id", hit.Id), zap.String("title", hitLyricsBody.Title))
+		s.logger.Debug("search result row", zap.String("type", hit.Type), zap.String("id", hit.Id), zap.String("title", hitLyricsBody.Title))
 	}
 
 	s.logger.Info("result", zap.Int64("totalHits", searchResult.Hits.TotalHits.Value))
@@ -144,15 +144,17 @@ func (s *Service) Search(ctx context.Context, text string) (lyrics []LyricsBody,
 func (s *Service) createIndexIfNotExist(ctx context.Context) error {
 	exists, err := s.esClient.IndexExists(s.indexName).Do(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("esClient.IndexExists: %w", err)
 	}
-	if !exists {
-		s.logger.Info("index doesn't exist, creating a new one", zap.String("indexNAme", s.indexName))
-		if _, err := s.esClient.CreateIndex(s.indexName).Body(_mapping).Do(ctx); err != nil {
-			return err
-		}
+	if exists {
+		return nil
 	}
-	return nil
+
+	s.logger.Info("index doesn't exist, creating a new one", zap.String("indexNAme", s.indexName))
+
+	_, err = s.esClient.CreateIndex(s.indexName).Body(_mapping).Do(ctx)
+
+	return err
 }
 
 func (s *Service) deleteByIndex(ctx context.Context, itemID string) (err error) {

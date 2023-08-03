@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
-	"log"
+	"fmt"
+	"os"
+	"os/signal"
 	"time"
 
 	"github.com/ahmagdy/lyricsify"
@@ -18,26 +20,49 @@ const (
 )
 
 func main() {
+	logger, _ := zap.NewProduction()
+
+	if err := run(logger); err != nil {
+		logger.Fatal("failed to run the example", zap.Error(err))
+	}
+}
+func run(logger *zap.Logger) error {
 	ctx, cancel := context.WithTimeout(context.Background(), _ctxTimeout)
 	defer cancel()
 
-	logger, _ := zap.NewProduction()
 	cfg, _ := config.New()
 	authServer := lyricsify.NewAuthServer(logger, cfg)
-	authServer.Start()
+	logger.Info("starting the server")
+	if err := authServer.Start(); err != nil {
+		logger.Error("failed to run", zap.Error(err))
+	}
+
 	authServer.WaitForAuthToBeCompleted()
 
 	if err := authServer.Verify(ctx); err != nil {
-		// TODO: handle
+		return fmt.Errorf("failed to verify: %w", err)
 	}
 
 	svc, err := lyricsify.New(ctx, authServer.SpotifyClient())
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("failed to inti svc: %w", err)
 	}
+
 	if err := loadSongs(ctx, svc, logger); err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("failed to load songs: %w", err)
 	}
+
+	logger.Info("done")
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+
+	// Waiting for SIGINT (kill -2)
+	<-stop
+
+	authServer.Stop(ctx)
+
+	return nil
 }
 
 func loadSongs(ctx context.Context, s *lyricsify.Service, logger *zap.Logger) error {
@@ -80,17 +105,6 @@ func loadSongs(ctx context.Context, s *lyricsify.Service, logger *zap.Logger) er
 		// fail open for now
 		// return err
 		logger.Error("received the following error when loading titles", zap.Error(err))
-	}
-
-	logger.Info("done")
-
-	searchResults, err := s.Search(ctx, "Did you work real hard")
-	if err != nil {
-		return err
-	}
-
-	for _, result := range searchResults {
-		logger.Info("search results", zap.String("candidateTitle", result.Title))
 	}
 
 	return nil
