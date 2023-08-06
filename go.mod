@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/google/wire v0.5.0
+	github.com/milindmadhukar/go-musixmatch v0.0.0-20230505103005-a37b8767717f
 	github.com/olivere/elastic/v7 v7.0.32
 	github.com/rs/cors v1.9.0
 	github.com/sourcegraph/conc v0.3.0
