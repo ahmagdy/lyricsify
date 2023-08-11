@@ -24,21 +24,25 @@ var (
 	_baseURL             = "https://api.genius.com/search"
 )
 
-// Service a service to scrap song lyrics from the internet
-type Service struct {
+type Service interface {
+	FindLyrics(ctx context.Context, songName string, artists string) (string /* lyrics */, error)
+}
+
+// geniusService a service to scrap song lyrics from the genius
+type geniusService struct {
 	logger            *zap.Logger
 	config            *config.Config
 	geniusAccessToken string
 }
 
-// New creates a new instance of lyrics scraper service
-func New(config *config.Config, logger *zap.Logger) (*Service, error) {
+// newGeniusService creates a new instance of lyrics scraper service
+func newGeniusService(logger *zap.Logger, config *config.Config) (Service, error) {
 	geniusAccessToken := config.GeniusToken
 	if geniusAccessToken == "" {
 		return nil, ErrGeniusTokenNotSet
 	}
 
-	return &Service{
+	return &geniusService{
 		logger:            logger,
 		config:            config,
 		geniusAccessToken: geniusAccessToken,
@@ -46,7 +50,7 @@ func New(config *config.Config, logger *zap.Logger) (*Service, error) {
 }
 
 // FindLyrics Get song lyrics
-func (s *Service) FindLyrics(ctx context.Context, songName string, artists string) (string, error) {
+func (s *geniusService) FindLyrics(ctx context.Context, songName string, artists string) (string, error) {
 	lyricsURL, err := s.fetchSongLyricsResults(ctx, songName, artists)
 	if err != nil {
 		return "", fmt.Errorf("couldn't find lyrics for song (%v): %w", songName, err)
@@ -78,7 +82,7 @@ func (s *Service) FindLyrics(ctx context.Context, songName string, artists strin
 }
 
 // fetchSongLyricsResults returns the URLs lyrics search results that matches the song.
-func (s *Service) fetchSongLyricsResults(ctx context.Context, songName string, artists string) (string, error) {
+func (s *geniusService) fetchSongLyricsResults(ctx context.Context, songName string, artists string) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", _baseURL, nil)
 	if err != nil {
 		return "", err
@@ -124,7 +128,7 @@ func (s *Service) fetchSongLyricsResults(ctx context.Context, songName string, a
 	return matchingURL, nil
 }
 
-func (s *Service) findSongLyricsURLInResponse(artists string, geniusResponse types.GeniusResponse) (string, bool /* ok */) {
+func (s *geniusService) findSongLyricsURLInResponse(artists string, geniusResponse types.GeniusResponse) (string, bool /* ok */) {
 	splitArtists := strings.Split(artists, ",")
 
 	for _, hitItem := range geniusResponse.Response.Hits {
