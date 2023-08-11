@@ -12,17 +12,21 @@ Consider checking [example](https://github.com/ahmagdy/lyricsify/blob/master/exa
 #### Config
 Expected values to be set as Environment Variables or in a YAML file in the Documents folder.
 ```yaml
-GENIUS_TOKEN:
+LYRICS_INDEX_NAME:
 SPOTIFY_ID:
-SPOTIFY_SECRET:
-LYRICS_INDEX_NAME: 
+SPOTIFY_SECRET: 
+GENIUS_TOKEN: 
+GENIUS_BASE_URL: 
+MUSIXMATCH_TOKEN:
+LYRICS_PROVIDER: genius|musixmatch
 ```
 
 #### Sample
 ```go
 ctx := context.Background()
 // Initialize Instance of Lyricsify
-lyricsify := lyricsify.New(ctx)
+svc, err := lyricsify.New(ctx, authServer.SpotifyClient())
+
 // Load all of your songs in Liked Songs section, the key is the song name and the value is the artist/s
 songsMap, err := lyricsify.LoadSongs(ctx)
 // ......
