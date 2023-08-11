@@ -29,7 +29,7 @@ func New(ctx context.Context, spotifyClient *spotify.Client) (*Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	scraperService, err := scraper.New(configConfig, logger)
+	scraperService, err := scraper.New(logger, configConfig)
 	if err != nil {
 		return nil, err
 	}

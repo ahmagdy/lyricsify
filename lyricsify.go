@@ -11,12 +11,12 @@ import (
 // Service Main package service
 type Service struct {
 	spotifyService *spotify.Service
-	scraper        *scraper.Service
+	scraper        scraper.Service
 	elasticClient  *search.Service
 }
 
 // New To create a new instance of Service
-func new(spotifyService *spotify.Service, scraper *scraper.Service, elasticClient *search.Service) *Service {
+func new(spotifyService *spotify.Service, scraper scraper.Service, elasticClient *search.Service) *Service {
 	return &Service{spotifyService, scraper, elasticClient}
 }
 
