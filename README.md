@@ -6,6 +6,11 @@ You're a Spotify user, you have a lot of songs in your playlist, you remembered 
 This tool should solve your problem because it will load all of your lyrics and allow you to search in all of it in an easy and reliable way.
 
 
+
+https://github.com/ahmagdy/lyricsify/assets/10447926/9e635f0e-2dad-41ab-a36f-9cdd92c4374c
+
+
+
 ## How to use it
 Consider checking [example](https://github.com/ahmagdy/lyricsify/blob/master/example/main.go) folder.
 
